@@ -2,23 +2,25 @@ package client
 
 import (
 	"errors"
-	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"sync"
+
+	"github.com/gorilla/websocket"
+
+	"github.com/bloom-chat/internal/util"
 )
 
 var mutex = &sync.Mutex{}
 
 type Manager struct {
-	clients map[Id]*Client
+	clients map[util.UUID]*Client
 }
 
 func NewManager() *Manager {
-	clients := make(map[Id]*Client)
-	return &Manager{clients:clients}
+	clients := make(map[util.UUID]*Client)
+	return &Manager{clients: clients}
 }
 
-func (manager *Manager) GetClient(id Id) (*Client, error) {
+func (manager *Manager) GetClient(id util.UUID) (*Client, error) {
 	client, ok := manager.clients[id]
 	if ok {
 		return client, nil
@@ -29,10 +31,11 @@ func (manager *Manager) GetClient(id Id) (*Client, error) {
 
 func (manager *Manager) AddClient(conn *websocket.Conn) *Client {
 	client := &Client{
-		Conn:        conn,
-		Id:          manager.GenerateID(),
-		Messages:    make(chan string),
-		CloseSignal: make(chan bool),
+		Conn:               conn,
+		Id:                 util.GenerateID(),
+		IncomingMessagesCh: make(chan string),
+		RoomsChs:           make(map[util.UUID] chan<- string),
+		CloseCh:            make(chan bool),
 	}
 	mutex.Lock()
 	manager.clients[client.Id] = client
@@ -40,17 +43,24 @@ func (manager *Manager) AddClient(conn *websocket.Conn) *Client {
 	return client
 }
 
-func (manager *Manager) RemoveClient(clientId Id) {
+func (manager *Manager) RemoveClient(clientId util.UUID) {
 	mutex.Lock()
 	delete(manager.clients, clientId)
 	mutex.Unlock()
 }
 
-//TODO remove
-func (manager *Manager) GetAllClients() *map[Id]*Client {
-	return &manager.clients
+func (manager *Manager) JoinRoom(clientId util.UUID, roomId util.UUID, roomCh chan<- string) {
+	mutex.Lock()
+	client, _ := manager.GetClient(clientId)
+	client.RoomsChs[roomId]=roomCh
+	mutex.Unlock()
 }
 
-func (manager *Manager) GenerateID() Id {
-	return Id(uuid.New().String())
+
+
+//TODO Remove
+func (manager *Manager) SendToAllClients(msg string) {
+	for _, client := range manager.clients {
+		client.IncomingMessagesCh <- msg
+	}
 }

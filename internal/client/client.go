@@ -1,20 +1,21 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/bloom-chat/internal/protocol"
-	"github.com/gorilla/websocket"
+	"github.com/bloom-chat/internal/util"
 	"log"
+
+	"github.com/gorilla/websocket"
+
+	"github.com/bloom-chat/internal/protocol"
 )
 
-type Id string
-
 type Client struct {
-	Conn        *websocket.Conn
-	Id          Id
-	Messages    chan string
-	CloseSignal chan bool
+	Conn               *websocket.Conn
+	Id                 util.UUID
+	IncomingMessagesCh chan string
+	RoomsChs           map[util.UUID]chan<- string
+	CloseCh            chan bool
 }
 
 var msgType = 1
@@ -26,25 +27,23 @@ func (client *Client) Start() {
 
 func (client *Client) Read() {
 	defer client.Conn.Close()
-	welcomeMsg := fmt.Sprintf("Client connected number: %d", client.Id)
+	welcomeMsg := fmt.Sprintf("Client connected: %s", client.Id)
 	log.Println(welcomeMsg)
 	if err := client.Conn.WriteMessage(msgType, []byte(welcomeMsg)); err != nil {
-		log.Println("Write message error: ", err)
+		log.Println("Write welcome message error: ", err)
 	}
 	for {
 		_, msg, err := client.Conn.ReadMessage()
+		message := string(msg)
 		if err != nil {
 			log.Println("Read message error: ", err)
 			break
 		}
-		log.Printf("Received message: %s from Client: %d\n", string(msg), client.Id)
-		request := protocol.Request{}
-		err = json.Unmarshal(msg, &request)
-		if err != nil {
-			log.Printf("Unmarshal Failed for message: %s\n", msg)
-		} else {
-			//dispatch message to rooms manager
-			roomChannel <- string(msg)
+		log.Printf("Received message: %s from Client: %s\n", message, client.Id)
+		//TODO send to the mean room, now sends to the Holy Room
+		for _, roomCh := range client.RoomsChs {
+			roomCh <- message
+
 		}
 	}
 }
@@ -53,12 +52,12 @@ func (client *Client) Write() {
 	defer client.Conn.Close()
 	for {
 		select {
-		case msg := <-client.Messages:
+		case msg := <-client.IncomingMessagesCh:
 			if err := client.Conn.WriteMessage(msgType, []byte(msg)); err != nil {
 				log.Println("Write message error: ", err)
 				break
 			}
-		case <-client.CloseSignal:
+		case <-client.CloseCh:
 			break
 		}
 	}
