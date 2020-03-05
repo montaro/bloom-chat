@@ -55,12 +55,3 @@ func (manager *Manager) JoinRoom(clientId util.UUID, roomId util.UUID, roomCh ch
 	client.RoomsChs[roomId]=roomCh
 	mutex.Unlock()
 }
-
-
-
-//TODO Remove
-func (manager *Manager) SendToAllClients(msg string) {
-	for _, client := range manager.clients {
-		client.IncomingMessagesCh <- msg
-	}
-}

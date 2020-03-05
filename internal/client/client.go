@@ -1,13 +1,14 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/bloom-chat/internal/util"
 	"log"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/bloom-chat/internal/protocol"
+	"github.com/bloom-chat/internal/util"
 )
 
 type Client struct {
@@ -40,11 +41,7 @@ func (client *Client) Read() {
 			break
 		}
 		log.Printf("Received message: %s from Client: %s\n", message, client.Id)
-		//TODO send to the mean room, now sends to the Holy Room
-		for _, roomCh := range client.RoomsChs {
-			roomCh <- message
-
-		}
+		go client.Process(msg)
 	}
 }
 
@@ -63,6 +60,29 @@ func (client *Client) Write() {
 	}
 }
 
-func (client *Client) Process() (protocol.Request, error) {
-	return protocol.Request{}, nil
+func (client *Client) Process(message []byte) {
+	request, err := client.ParseRequest(message)
+	if err != nil {
+		response := protocol.Response{
+			Op:   protocol.ERROR,
+			Data: map[string]string{"value": err.Error()},
+		}
+		msg, _ := json.Marshal(response)
+		client.IncomingMessagesCh <- string(msg)
+	} else {
+		switch request.Op {
+		case protocol.REQUEST_MSG:
+			client.handleRequestMessage(request.Data)
+		}
+	}
+}
+
+func (client *Client) ParseRequest(message []byte) (*protocol.Request, error) {
+	request := protocol.Request{}
+	err := json.Unmarshal(message, &request)
+	if err != nil {
+		log.Printf("error parsing a message: %s from client: %s\n%s\n", string(message), client.Id, err)
+		return nil, err
+	}
+	return &request, nil
 }
