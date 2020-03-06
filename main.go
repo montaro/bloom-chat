@@ -9,8 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	clientz "github.com/bloom-chat/internal/client"
-	roomz "github.com/bloom-chat/internal/room"
+	"github.com/bloom-chat/internal/room"
 )
 
 var address = flag.String("address", "localhost:8080", "HTTP service address")
@@ -18,11 +17,11 @@ var address = flag.String("address", "localhost:8080", "HTTP service address")
 var upgrader = websocket.Upgrader{}
 var clientsCount uint64
 
-var clientsManager *clientz.Manager
-var roomsManager *roomz.Manager
+var clientsManager *room.ClientManager
+//var roomsManager *roomz.ClientManager
 
 //TODO Remove
-var HolyRoom *roomz.Room
+//var HolyRoom *roomz.Room
 
 func chat(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -39,8 +38,8 @@ func chat(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	//TODO remove adding to the Holy Room
-	err = HolyRoom.JoinClient(client.Id)
-	clientsManager.JoinRoom(client.Id, HolyRoom.Id, HolyRoom.MessagesCh)
+	//err = HolyRoom.JoinClient(client.Id)
+	//clientsManager.JoinRoom(client.Id, HolyRoom.Id, HolyRoom.MessagesCh)
 	if err != nil {
 		//TODO will be removed with Holy Room removal
 		log.Printf("client: %s failed to join Holy room, closing connection...", client.Id)
@@ -53,10 +52,17 @@ func main() {
 	flag.Parse()
 	fmt.Println("Server blooming...: ", *address)
 	log.SetFlags(0)
-	http.HandleFunc("/chat", chat)
-	clientsManager = clientz.NewManager()
-	roomsManager = roomz.NewManager()
-	HolyRoom = roomsManager.CreateRoom(clientsManager, "HolyRoom")
-	go HolyRoom.Broadcast()
+	http.HandleFunc("/_ah/health", healthCheckHandler)
+	http.Handle("/", http.FileServer(http.Dir("static")))
+	http.HandleFunc("/ws", chat)
+	clientsManager = room.NewClientManager()
+	//roomsManager = roomz.NewClientManager()
+	//HolyRoom = roomsManager.CreateRoom(clientsManager, "HolyRoom")
+	//go HolyRoom.Broadcast()
 	log.Fatal(http.ListenAndServe(*address, nil))
+}
+
+// healthCheckHandler is used by App Engine Flex to check instance health.
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	_, _ = fmt.Fprint(w, "ok")
 }

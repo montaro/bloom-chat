@@ -1,4 +1,4 @@
-package client
+package room
 
 import (
 	"encoding/json"
@@ -71,8 +71,10 @@ func (client *Client) Process(message []byte) {
 		client.IncomingMessagesCh <- string(msg)
 	} else {
 		switch request.Op {
-		case protocol.REQUEST_MSG:
+		case protocol.RequestMessage:
 			client.handleRequestMessage(request.Data)
+		case protocol.CreateRoom:
+			client.handleCreateRoom(request.Data)
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package room
 
 import (
-	clientz "github.com/bloom-chat/internal/client"
 	"github.com/bloom-chat/internal/util"
 	"log"
 	"sync"
@@ -12,8 +11,8 @@ var mutex = &sync.Mutex{}
 type Room struct {
 	Id             util.UUID
 	topic          string
-	clientsManager *clientz.Manager
-	clients        map[util.UUID]*clientz.Client
+	clientsManager *ClientManager
+	clients        map[util.UUID]*Client
 	MessagesCh     chan string
 }
 

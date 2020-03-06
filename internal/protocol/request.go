@@ -5,9 +5,10 @@ import "github.com/bloom-chat/internal/util"
 type RequestOperation string
 
 const (
-	REQUEST_MSG   RequestOperation = "REQ_MSG"
-	SET_NAME      RequestOperation = "SET_NAME"
-	SET_ROOM_NAME RequestOperation = "SET_ROOM_NAME"
+	CreateRoom     RequestOperation = "CREATE_ROOM"
+	RequestMessage RequestOperation = "REQ_MSG"
+	SET_NAME       RequestOperation = "SET_NAME"
+	SET_ROOM_NAME  RequestOperation = "SET_ROOM_NAME"
 )
 
 type Request struct {
@@ -15,16 +16,20 @@ type Request struct {
 	Data map[string]interface{} `json:"data"`
 }
 
+type CreateRoomData struct {
+	Name   string
+}
+
 type RequestMessageData struct {
-	To      string
+	To      util.UUID
 	Message string
 }
 
-type SetNameData struct {
+type SetName struct {
 	Name string
 }
 
-type SetRoomNameData struct {
+type SetRoomName struct {
 	RoomId util.UUID
 	Name   string
 }
