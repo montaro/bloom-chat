@@ -1,14 +1,13 @@
 package protocol
 
-//TODO
-type ResponseOperation string
+type RequestData interface {
+	String() string
+}
 
-const (
-	RESPONSE_MESSAGE ResponseOperation = "RES_MSG"
-	ERROR            ResponseOperation = "ERROR"
-)
+type RequestI interface {
+	decode()
+}
 
-type Response struct {
-	Op   ResponseOperation `json:"op"`
-	Data map[string]string `json:"data"`
+type ResponseData interface {
+	decode()
 }

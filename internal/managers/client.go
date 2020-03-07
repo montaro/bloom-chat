@@ -3,6 +3,7 @@ package managers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -14,6 +15,7 @@ import (
 type Client struct {
 	Conn               *websocket.Conn
 	Id                 util.UUID
+	name               string
 	IncomingMessagesCh chan string
 	RoomsChs           map[util.UUID]chan<- string
 	CloseCh            chan bool
@@ -72,9 +74,21 @@ func (client *Client) Process(message []byte) {
 	} else {
 		switch request.Op {
 		case protocol.RequestMessage:
-			client.handleRequestMessage(request.Data)
+			requestMessageData := &protocol.RequestMessageData{}
+			err := mapstructure.Decode(request.Data, requestMessageData)
+			if err != nil {
+				client.returnParseError()
+			} else {
+				client.handleRequestMessage(requestMessageData)
+			}
 		case protocol.CreateRoom:
-			client.handleCreateRoom(request.Data)
+			createRoomData := &protocol.CreateRoomData{}
+			err := mapstructure.Decode(request.Data, createRoomData)
+			if err != nil {
+				client.returnParseError()
+			} else {
+				client.handleCreateRoom(createRoomData)
+			}
 		}
 	}
 }
