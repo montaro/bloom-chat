@@ -1,4 +1,4 @@
-package room
+package managers
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package room
+package managers
 
 import (
 	"fmt"
@@ -27,11 +27,13 @@ func (client *Client) handleRequestMessage(data map[string]interface{}) {
 
 func (client *Client) handleCreateRoom(data map[string]interface{}) {
 	createRoomData := protocol.CreateRoomData{}
-	err := mapstructure.Decode(data, createRoomData)
+	err := mapstructure.Decode(data, &createRoomData)
 	if err != nil {
 		client.returnParseError()
 	} else {
-		//TODO
+		room := roomManager.CreateRoom(createRoomData.Topic)
+		client.IncomingMessagesCh <- string(room.id)
+		client.IncomingMessagesCh <- room.topic
 	}
 }
 

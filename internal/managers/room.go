@@ -1,4 +1,4 @@
-package room
+package managers
 
 import (
 	"github.com/bloom-chat/internal/util"
@@ -9,17 +9,16 @@ import (
 var mutex = &sync.Mutex{}
 
 type Room struct {
-	Id             util.UUID
-	topic          string
-	clientsManager *ClientManager
-	clients        map[util.UUID]*Client
-	MessagesCh     chan string
+	id         util.UUID
+	topic      string
+	clients    map[util.UUID]*Client
+	messagesCh chan string
 }
 
 func (room *Room) Broadcast() {
 	for {
 		select {
-		case msg := <-room.MessagesCh:
+		case msg := <-room.messagesCh:
 			for _, client := range room.clients {
 				client.IncomingMessagesCh <- msg
 			}
@@ -28,10 +27,10 @@ func (room *Room) Broadcast() {
 }
 
 func (room *Room) JoinClient(clientId util.UUID) error {
-	client, err := room.clientsManager.GetClient(clientId)
+	client, err := clientManager.GetClient(clientId)
 	if err != nil {
 		log.Printf("Room: %s-%s, failed to join client: %s on error: %v",
-			room.Id, room.topic, clientId, err)
+			room.id, room.topic, clientId, err)
 		return err
 	}
 	mutex.Lock()

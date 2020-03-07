@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/bloom-chat/internal/room"
+	"github.com/bloom-chat/internal/managers"
 )
 
 var address = flag.String("address", "localhost:8080", "HTTP service address")
@@ -17,8 +17,8 @@ var address = flag.String("address", "localhost:8080", "HTTP service address")
 var upgrader = websocket.Upgrader{}
 var clientsCount uint64
 
-var clientsManager *room.ClientManager
-//var roomsManager *roomz.ClientManager
+var clientsManager *managers.ClientManager
+//var roomsManager *managers.ClientManager
 
 //TODO Remove
 //var HolyRoom *roomz.Room
@@ -38,8 +38,8 @@ func chat(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	//TODO remove adding to the Holy Room
-	//err = HolyRoom.JoinClient(client.Id)
-	//clientsManager.JoinRoom(client.Id, HolyRoom.Id, HolyRoom.MessagesCh)
+	//err = HolyRoom.JoinClient(client.id)
+	//clientsManager.JoinRoom(client.id, HolyRoom.id, HolyRoom.messagesCh)
 	if err != nil {
 		//TODO will be removed with Holy Room removal
 		log.Printf("client: %s failed to join Holy room, closing connection...", client.Id)
@@ -55,8 +55,9 @@ func main() {
 	http.HandleFunc("/_ah/health", healthCheckHandler)
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/ws", chat)
-	clientsManager = room.NewClientManager()
-	//roomsManager = roomz.NewClientManager()
+	//initialize managers
+	clientsManager = managers.NewClientManager()
+	managers.NewRoomManager()
 	//HolyRoom = roomsManager.CreateRoom(clientsManager, "HolyRoom")
 	//go HolyRoom.Broadcast()
 	log.Fatal(http.ListenAndServe(*address, nil))

@@ -17,7 +17,7 @@ type Request struct {
 }
 
 type CreateRoomData struct {
-	Name   string
+	Topic string
 }
 
 type RequestMessageData struct {

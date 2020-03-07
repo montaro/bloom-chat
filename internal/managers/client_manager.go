@@ -1,20 +1,28 @@
-package room
+package managers
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/bloom-chat/internal/util"
 )
 
+var clientOnce sync.Once
+
 type ClientManager struct {
 	clients map[util.UUID]*Client
 }
 
+var clientManager *ClientManager
+
 func NewClientManager() *ClientManager {
-	clients := make(map[util.UUID]*Client)
-	return &ClientManager{clients: clients}
+	clientOnce.Do(func() {
+		clients := make(map[util.UUID]*Client)
+		clientManager = &ClientManager{clients: clients}
+	})
+	return clientManager
 }
 
 func (manager *ClientManager) GetClient(id util.UUID) (*Client, error) {
