@@ -3,25 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"sync/atomic"
-
-	"github.com/gorilla/websocket"
 
 	"github.com/bloom-chat/internal/managers"
 )
 
-var address = flag.String("address", "localhost:8080", "HTTP service address")
+var address = flag.String("address", "0.0.0.0:8080", "HTTP service address")
 
 var upgrader = websocket.Upgrader{}
-var clientsCount uint64
 
 var clientsManager *managers.ClientManager
-//var roomsManager *managers.ClientManager
-
-//TODO Remove
-//var HolyRoom *roomz.Room
 
 func chat(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -29,7 +22,6 @@ func chat(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Upgrade to websocket failed", err)
 	}
-	atomic.AddUint64(&clientsCount, 1)
 	client := clientsManager.AddClient(conn)
 	conn.SetCloseHandler(func(code int, text string) error {
 		log.Printf("Client: %s disconnected!\n", client.Id)
@@ -37,14 +29,6 @@ func chat(w http.ResponseWriter, r *http.Request) {
 		client.CloseCh <- true
 		return nil
 	})
-	//TODO remove adding to the Holy Room
-	//err = HolyRoom.JoinClient(client.id)
-	//clientsManager.JoinRoom(client.id, HolyRoom.id, HolyRoom.messagesCh)
-	if err != nil {
-		//TODO will be removed with Holy Room removal
-		log.Printf("client: %s failed to join Holy room, closing connection...", client.Id)
-		_ = conn.Close()
-	}
 	client.Start()
 }
 
@@ -58,8 +42,6 @@ func main() {
 	//initialize managers
 	clientsManager = managers.NewClientManager()
 	managers.NewRoomManager()
-	//HolyRoom = roomsManager.CreateRoom(clientsManager, "HolyRoom")
-	//go HolyRoom.Broadcast()
 	log.Fatal(http.ListenAndServe(*address, nil))
 }
 
