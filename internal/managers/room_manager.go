@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/bloom-chat/internal/util"
@@ -23,7 +24,7 @@ func NewRoomManager() *RoomManager {
 	return roomManager
 }
 
-func (manager *RoomManager) CreateRoom(topic string) *Room {
+func (manager *RoomManager) createRoom(topic string) *Room {
 	room := &Room{
 		id:         util.GenerateID(),
 		topic:      topic,
@@ -34,4 +35,15 @@ func (manager *RoomManager) CreateRoom(topic string) *Room {
 	manager.rooms[room.id] = room
 	mutex.Unlock()
 	return room
+}
+
+func (manager *RoomManager) getRoom(roomId util.UUID) (*Room, error) {
+	mutex.Lock()
+	room, ok := manager.rooms[roomId]
+	mutex.Unlock()
+	if !ok {
+		return nil, errors.New("room not found")
+	} else {
+		return room, nil
+	}
 }

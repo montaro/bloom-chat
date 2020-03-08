@@ -2,11 +2,12 @@ package managers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"log"
 
 	"github.com/gorilla/websocket"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/bloom-chat/internal/protocol"
 	"github.com/bloom-chat/internal/util"
@@ -65,30 +66,48 @@ func (client *Client) Write() {
 func (client *Client) Process(message []byte) {
 	request, err := client.ParseRequest(message)
 	if err != nil {
-		response := protocol.Response{
-			Op:   protocol.ERROR,
-			Data: map[string]string{"value": err.Error()},
-		}
-		msg, _ := json.Marshal(response)
-		client.IncomingMessagesCh <- string(msg)
+		client.returnClientError(err)
 	} else {
 		switch request.Op {
+		//Send request to room
 		case protocol.RequestMessage:
-			requestMessageData := &protocol.RequestMessageData{}
+			requestMessageData := &protocol.SendMessageRequest{}
 			err := mapstructure.Decode(request.Data, requestMessageData)
 			if err != nil {
-				client.returnParseError()
+				client.returnParseDataError(err)
 			} else {
 				client.handleRequestMessage(requestMessageData)
 			}
+		//Create room
 		case protocol.CreateRoom:
-			createRoomData := &protocol.CreateRoomData{}
+			createRoomData := &protocol.CreateRoomRequest{}
 			err := mapstructure.Decode(request.Data, createRoomData)
 			if err != nil {
-				client.returnParseError()
+				client.returnParseDataError(err)
 			} else {
 				client.handleCreateRoom(createRoomData)
 			}
+		//Set user name
+		case protocol.SetUserName:
+			setUserNameData := &protocol.SetUserNameRequest{}
+			err := mapstructure.Decode(request.Data, setUserNameData)
+			if err != nil {
+				client.returnParseDataError(err)
+			} else {
+				client.handleSetUserName(setUserNameData)
+			}
+		//Set room topic
+		case protocol.SetRoomTopic:
+			setRoomTopicData := &protocol.SetRoomTopicRequest{}
+			err := mapstructure.Decode(request.Data, setRoomTopicData)
+			if err != nil {
+				client.returnParseDataError(err)
+			} else {
+				client.handleSetRoomTopic(setRoomTopicData)
+			}
+
+		default:
+			client.IncomingMessagesCh <- "UNKNOWN CMD: " + string(request.Op)
 		}
 	}
 }
@@ -99,6 +118,12 @@ func (client *Client) ParseRequest(message []byte) (*protocol.Request, error) {
 	if err != nil {
 		log.Printf("error parsing a message: %s from client: %s\n%s\n", string(message), client.Id, err)
 		return nil, err
+	}
+	if request.Op == "" {
+		return nil, errors.New("op field is required")
+	}
+	if request.RequestId == "" {
+		return nil, errors.New("request_id field is required")
 	}
 	return &request, nil
 }

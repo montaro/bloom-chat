@@ -1,9 +1,8 @@
 package protocol
 
 import (
-	"github.com/hackebrot/go-repr/repr"
-
 	"github.com/bloom-chat/internal/util"
+	"github.com/hackebrot/go-repr/repr"
 )
 
 type RequestOperation string
@@ -11,18 +10,19 @@ type RequestOperation string
 const (
 	CreateRoom     RequestOperation = "CREATE_ROOM"
 	RequestMessage RequestOperation = "REQ_MSG"
-	SET_NAME       RequestOperation = "SET_NAME"
-	SET_ROOM_NAME  RequestOperation = "SET_ROOM_NAME"
+	SetUserName    RequestOperation = "SET_USER_NAME"
+	SetRoomTopic   RequestOperation = "SET_ROOM_TOPIC"
 )
 
 type Request struct {
-	Op   RequestOperation       `json:"op"`
-	Data map[string]interface{} `json:"data"`
+	RequestId util.UUID              `json:"request_id"`
+	Op        RequestOperation       `json:"op"`
+	Data      map[string]interface{} `json:"data"`
 }
 
 //func (request *Request) decode() (RequestData, error) {
 //	switch request.Op {
-//	case CreateRoom:
+//	case createRoom:
 //		requestMessageData := &RequestMessageData{}
 //		err := mapstructure.Decode(request.Data, requestMessageData)
 //		if err != nil {
@@ -35,28 +35,68 @@ type Request struct {
 //	}
 //}
 
-type CreateRoomData struct {
+type CreateRoomRequest struct {
 	Topic string
 }
 
-func (createRoomData *CreateRoomData) String() string {
-	return repr.Repr(createRoomData)
+func (createRoomRequest *CreateRoomRequest) String() string {
+	return repr.Repr(createRoomRequest)
 }
 
-type RequestMessageData struct {
-	To      util.UUID
+type SendMessageRequest struct {
+	RoomId  util.UUID
 	Message string
 }
 
-func (requestMessageData *RequestMessageData) String() string {
-	return repr.Repr(requestMessageData)
+func (sendMessageRequest *SendMessageRequest) String() string {
+	return repr.Repr(sendMessageRequest)
 }
 
-type SetName struct {
+type SetUserNameRequest struct {
 	Name string
 }
 
-type SetRoomName struct {
+func (setUserNameRequest *SetUserNameRequest) String() string {
+	return repr.Repr(setUserNameRequest)
+}
+
+type SetRoomTopicRequest struct {
 	RoomId util.UUID
-	Name   string
+	Topic  string
+}
+
+func (setRoomTopicRequest *SetRoomTopicRequest) String() string {
+	return repr.Repr(setRoomTopicRequest)
+}
+
+type JoinRoomRequest struct {
+	roomId util.UUID
+}
+
+func (joinRoomRequest *JoinRoomRequest) String() string {
+	return repr.Repr(joinRoomRequest)
+}
+
+type LeaveRoomRequest struct {
+	roomId util.UUID
+}
+
+func (leaveRoomRequest *LeaveRoomRequest) String() string {
+	return repr.Repr(leaveRoomRequest)
+}
+
+type BeginTypingRequest struct {
+	roomId util.UUID
+}
+
+func (beginTypingRequest *BeginTypingRequest) String() string {
+	return repr.Repr(beginTypingRequest)
+}
+
+type StopTypingRequest struct {
+	roomId util.UUID
+}
+
+func (stopTypingRequest *StopTypingRequest) String() string {
+	return repr.Repr(stopTypingRequest)
 }

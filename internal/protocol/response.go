@@ -1,14 +1,87 @@
 package protocol
 
-//TODO
-type ResponseOperation string
-
-const (
-	RESPONSE_MESSAGE ResponseOperation = "RES_MSG"
-	ERROR            ResponseOperation = "ERROR"
+import (
+	"github.com/bloom-chat/internal/util"
+	"github.com/hackebrot/go-repr/repr"
 )
 
+type ResponseOperation string
+
 type Response struct {
-	Op   ResponseOperation `json:"op"`
-	Data map[string]string `json:"data"`
+	RequestId util.UUID 	`json:"request_id"`
+	Data      interface{}   `json:"data"`
 }
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+func (errorResponse *ErrorResponse) String() string {
+	return repr.Repr(errorResponse)
+}
+
+type CreateRoomResponse struct {
+	RoomId util.UUID
+}
+
+func (createRoomResponse *CreateRoomResponse) String() string {
+	return repr.Repr(createRoomResponse)
+}
+
+//type SendMessageResponse struct {
+//	RoomId  util.UUID
+//	Message string
+//}
+//
+//func (sendMessageResponse *SendMessageResponse) String() string {
+//	return repr.Repr(sendMessageResponse)
+//}
+
+//type SetUserNameResponse struct {
+//	Topic string
+//}
+//
+//func (setUserNameResponse *SetUserNameResponse) String() string {
+//	return repr.Repr(setUserNameResponse)
+//}
+
+//type SetRoomTopicResponse struct {
+//	RoomId util.UUID
+//	Topic   string
+//}
+//
+//func (setRoomTopicResponse *SetRoomTopicResponse) String() string {
+//	return repr.Repr(setRoomTopicResponse)
+//}
+
+//type JoinRoomResponse struct {
+//	roomId util.UUID
+//}
+//
+//func (joinRoomResponse *JoinRoomResponse) String() string {
+//	return repr.Repr(joinRoomResponse)
+//}
+
+//type LeaveRoomResponse struct {
+//	roomId util.UUID
+//}
+//
+//func (leaveRoomResponse *LeaveRoomResponse) String() string {
+//	return repr.Repr(leaveRoomResponse)
+//}
+
+//type BeginTypingResponse struct {
+//	roomId util.UUID
+//}
+//
+//func (beginTypingResponse *BeginTypingResponse) String() string {
+//	return repr.Repr(beginTypingResponse)
+//}
+//
+//type StopTypingResponse struct {
+//	roomId util.UUID
+//}
+//
+//func (stopTypingResponse *StopTypingResponse) String() string {
+//	return repr.Repr(stopTypingResponse)
+//}

@@ -1,13 +1,5 @@
 package protocol
 
-type RequestData interface {
+type Envelop interface {
 	String() string
-}
-
-type RequestI interface {
-	decode()
-}
-
-type ResponseData interface {
-	decode()
 }
