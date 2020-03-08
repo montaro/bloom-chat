@@ -19,4 +19,4 @@ network:
   session_affinity: true
 
 manual_scaling:
-  instances: 2
+  instances: 1
