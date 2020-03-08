@@ -8,10 +8,11 @@ import (
 type RequestOperation string
 
 const (
-	CreateRoom     RequestOperation = "CREATE_ROOM"
-	RequestMessage RequestOperation = "REQ_MSG"
-	SetUserName    RequestOperation = "SET_USER_NAME"
-	SetRoomTopic   RequestOperation = "SET_ROOM_TOPIC"
+	CreateRoom   RequestOperation = "CREATE_ROOM"
+	SendMessage  RequestOperation = "SEND_MSG"
+	SetUserName  RequestOperation = "SET_USER_NAME"
+	SetRoomTopic RequestOperation = "SET_ROOM_TOPIC"
+	JoinRoom     RequestOperation = "JOIN_ROOM"
 )
 
 type Request struct {
@@ -70,7 +71,7 @@ func (setRoomTopicRequest *SetRoomTopicRequest) String() string {
 }
 
 type JoinRoomRequest struct {
-	roomId util.UUID
+	RoomId util.UUID
 }
 
 func (joinRoomRequest *JoinRoomRequest) String() string {

@@ -39,7 +39,7 @@ func (manager *ClientManager) AddClient(conn *websocket.Conn) *Client {
 		Conn:               conn,
 		Id:                 util.GenerateID(),
 		IncomingMessagesCh: make(chan string),
-		RoomsChs:           make(map[util.UUID] chan<- string),
+		//RoomsChs:           make(map[util.UUID] chan<- string),
 		CloseCh:            make(chan bool),
 	}
 	mutex.Lock()
@@ -51,12 +51,5 @@ func (manager *ClientManager) AddClient(conn *websocket.Conn) *Client {
 func (manager *ClientManager) RemoveClient(clientId util.UUID) {
 	mutex.Lock()
 	delete(manager.clients, clientId)
-	mutex.Unlock()
-}
-
-func (manager *ClientManager) JoinRoom(clientId util.UUID, roomId util.UUID, roomCh chan<- string) {
-	mutex.Lock()
-	client, _ := manager.GetClient(clientId)
-	client.RoomsChs[roomId]=roomCh
 	mutex.Unlock()
 }

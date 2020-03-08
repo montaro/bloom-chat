@@ -2,28 +2,32 @@ package managers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/bloom-chat/internal/util"
 	"log"
 
 	"github.com/bloom-chat/internal/protocol"
 )
 
-func (client *Client) handleRequestMessage(requestMessageData *protocol.SendMessageRequest) {
-	r := requestMessageData.RoomId
-	room, ok := client.RoomsChs[r]
-	if !ok {
-		client.IncomingMessagesCh <- fmt.Sprintf("unknown or closed room: %s", r)
+func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData *protocol.SendMessageRequest) {
+	room, err := roomManager.getRoom(requestMessageData.RoomId)
+	if err != nil {
+		client.returnError(requestId, err)
 	} else {
-		room <- requestMessageData.Message
+		//make sure client is a member in the room
+		_, ok := room.clients[client.Id]
+		if ok {
+			room.messagesCh <- requestMessageData.Message
+			log.Printf("Set Room Topic cmd received:\n%s", requestMessageData.String())
+			client.returnAck(requestId)
+		} else {
+			client.returnForbiddenError(requestId	)
+		}
 	}
-	log.Printf("Request Message cmd received:\n%s", requestMessageData.String())
-	//TODO Remove, return response instead
-	client.IncomingMessagesCh <- string(requestMessageData.RoomId)
-	client.IncomingMessagesCh <- requestMessageData.Message
-
 }
 
-func (client *Client) handleCreateRoom(createRoomData *protocol.CreateRoomRequest) {
+func (client *Client) handleCreateRoom(requestId util.UUID, createRoomData *protocol.CreateRoomRequest) {
 	room := roomManager.createRoom(createRoomData.Topic)
 	log.Printf("Create Room cmd received:\n%s", createRoomData.String())
 	createRoomResponse := protocol.CreateRoomResponse{
@@ -31,46 +35,72 @@ func (client *Client) handleCreateRoom(createRoomData *protocol.CreateRoomReques
 	}
 	bits, err := json.Marshal(createRoomResponse)
 	if err != nil {
-		client.returnSystemError(err)
+		client.returnSystemError(requestId, err)
 	} else {
 		client.IncomingMessagesCh <- string(bits)
 	}
 }
 
-func (client *Client) handleSetUserName(setUserNameData *protocol.SetUserNameRequest) {
+func (client *Client) handleSetUserName(requestId util.UUID, setUserNameData *protocol.SetUserNameRequest) {
 	client.name = setUserNameData.Name
 	log.Printf("Set User Topic cmd received:\n%s", setUserNameData.String())
-	//TODO Remove
-	client.IncomingMessagesCh <- client.name
+	client.returnAck(requestId)
 }
 
-func (client *Client) handleSetRoomTopic(setRoomTopicData *protocol.SetRoomTopicRequest) {
+func (client *Client) handleSetRoomTopic(requestId util.UUID, setRoomTopicData *protocol.SetRoomTopicRequest) {
 	room, err := roomManager.getRoom(setRoomTopicData.RoomId)
 	if err != nil {
-		client.returnClientError(err)
+		client.returnError(requestId, err)
 	} else {
 		room.topic = setRoomTopicData.Topic
 		log.Printf("Set Room Topic cmd received:\n%s", setRoomTopicData.String())
-		//TODO Remove
-		client.IncomingMessagesCh <- room.topic
+		client.returnAck(requestId)
 	}
 }
 
-func (client *Client) returnClientError(err error) {
-	errorResponse := &protocol.ErrorResponse{Error: err.Error()}
+func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *protocol.JoinRoomRequest) {
+	room, err := roomManager.getRoom(joinRoomRequest.RoomId)
+	if err != nil {
+		client.returnError(requestId, err)
+	} else {
+		room.JoinClient(client)
+		log.Printf("Join Room cmd received:\n%s", joinRoomRequest.String())
+		client.returnAck(requestId)
+	}
+}
+
+func (client *Client) returnAck(requestId util.UUID) {
+	ack := &protocol.Ack{Done: true}
 	response := protocol.Response{
-		Data: errorResponse,
+		RequestId: requestId,
+		Data:      ack,
 	}
 	msg, _ := json.Marshal(response)
 	streamMsg := string(msg)
 	client.IncomingMessagesCh <- streamMsg
 }
 
-func (client *Client) returnParseDataError(err error) {
-	client.IncomingMessagesCh <- fmt.Sprintf("failed to parse data with error:\n%s", err.Error())
+func (client *Client) returnError(requestId util.UUID, err error) {
+	errorResponse := &protocol.ErrorResponse{Error: err.Error()}
+	response := protocol.Response{
+		RequestId: requestId,
+		Data:      errorResponse,
+	}
+	msg, _ := json.Marshal(response)
+	streamMsg := string(msg)
+	client.IncomingMessagesCh <- streamMsg
 }
 
-func (client *Client) returnSystemError(err error) {
-	//TODO enhance error handling
-	client.IncomingMessagesCh <- err.Error()
+func (client *Client) returnParseDataError(requestId util.UUID, err error) {
+	client.returnError(requestId, errors.New(fmt.Sprintf("failed to parse data with error:\n%s",
+		err.Error())))
+}
+
+func (client *Client) returnSystemError(requestId util.UUID, err error) {
+	client.returnError(requestId, errors.New(fmt.Sprintf("internal system error:\n%s",
+		err.Error())))
+}
+
+func (client *Client) returnForbiddenError(requestId util.UUID) {
+	client.returnError(requestId, errors.New("forbidden action"))
 }

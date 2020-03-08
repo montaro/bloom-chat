@@ -2,7 +2,6 @@ package managers
 
 import (
 	"github.com/bloom-chat/internal/util"
-	"log"
 	"sync"
 )
 
@@ -26,15 +25,8 @@ func (room *Room) Broadcast() {
 	}
 }
 
-func (room *Room) JoinClient(clientId util.UUID) error {
-	client, err := clientManager.GetClient(clientId)
-	if err != nil {
-		log.Printf("Room: %s-%s, failed to join client: %s on error: %v",
-			room.id, room.topic, clientId, err)
-		return err
-	}
+func (room *Room) JoinClient(client *Client) {
 	mutex.Lock()
-	room.clients[clientId] = client
+	room.clients[client.Id] = client
 	defer mutex.Unlock()
-	return nil
 }

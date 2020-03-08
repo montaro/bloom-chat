@@ -34,6 +34,7 @@ func (manager *RoomManager) createRoom(topic string) *Room {
 	mutex.Lock()
 	manager.rooms[room.id] = room
 	mutex.Unlock()
+	go room.Broadcast()
 	return room
 }
 

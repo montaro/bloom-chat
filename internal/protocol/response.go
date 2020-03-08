@@ -8,8 +8,8 @@ import (
 type ResponseOperation string
 
 type Response struct {
-	RequestId util.UUID 	`json:"request_id"`
-	Data      interface{}   `json:"data"`
+	RequestId util.UUID `json:"request_id"`
+	Data      Envelop   `json:"data"`
 }
 
 type ErrorResponse struct {
@@ -20,8 +20,16 @@ func (errorResponse *ErrorResponse) String() string {
 	return repr.Repr(errorResponse)
 }
 
+type Ack struct {
+	Done bool `json:"done"`
+}
+
+func (ack *Ack) String() string {
+	return repr.Repr(ack)
+}
+
 type CreateRoomResponse struct {
-	RoomId util.UUID
+	RoomId util.UUID `json:"roomId"`
 }
 
 func (createRoomResponse *CreateRoomResponse) String() string {

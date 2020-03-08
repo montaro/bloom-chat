@@ -18,7 +18,6 @@ type Client struct {
 	Id                 util.UUID
 	name               string
 	IncomingMessagesCh chan string
-	RoomsChs           map[util.UUID]chan<- string
 	CloseCh            chan bool
 }
 
@@ -66,46 +65,58 @@ func (client *Client) Write() {
 func (client *Client) Process(message []byte) {
 	request, err := client.ParseRequest(message)
 	if err != nil {
-		client.returnClientError(err)
+		var rId util.UUID
+		if request != nil {
+			rId = request.RequestId
+		}
+		client.returnError(rId, err)
 	} else {
 		switch request.Op {
-		//Send request to room
-		case protocol.RequestMessage:
+		//Send message to room
+		case protocol.SendMessage:
 			requestMessageData := &protocol.SendMessageRequest{}
 			err := mapstructure.Decode(request.Data, requestMessageData)
 			if err != nil {
-				client.returnParseDataError(err)
+				client.returnParseDataError(request.RequestId, err)
 			} else {
-				client.handleRequestMessage(requestMessageData)
+				client.handleSendMessage(request.RequestId, requestMessageData)
 			}
 		//Create room
 		case protocol.CreateRoom:
 			createRoomData := &protocol.CreateRoomRequest{}
 			err := mapstructure.Decode(request.Data, createRoomData)
 			if err != nil {
-				client.returnParseDataError(err)
+				client.returnParseDataError(request.RequestId, err)
 			} else {
-				client.handleCreateRoom(createRoomData)
+				client.handleCreateRoom(request.RequestId, createRoomData)
 			}
 		//Set user name
 		case protocol.SetUserName:
 			setUserNameData := &protocol.SetUserNameRequest{}
 			err := mapstructure.Decode(request.Data, setUserNameData)
 			if err != nil {
-				client.returnParseDataError(err)
+				client.returnParseDataError(request.RequestId, err)
 			} else {
-				client.handleSetUserName(setUserNameData)
+				client.handleSetUserName(request.RequestId, setUserNameData)
 			}
 		//Set room topic
 		case protocol.SetRoomTopic:
 			setRoomTopicData := &protocol.SetRoomTopicRequest{}
 			err := mapstructure.Decode(request.Data, setRoomTopicData)
 			if err != nil {
-				client.returnParseDataError(err)
+				client.returnParseDataError(request.RequestId, err)
 			} else {
-				client.handleSetRoomTopic(setRoomTopicData)
+				client.handleSetRoomTopic(request.RequestId, setRoomTopicData)
 			}
-
+		//Join room
+		case protocol.JoinRoom:
+			joinRoomRequest := &protocol.JoinRoomRequest{}
+			err := mapstructure.Decode(request.Data, joinRoomRequest)
+			if err != nil {
+				client.returnParseDataError(request.RequestId, err)
+			} else {
+				client.handleJoinRoom(request.RequestId, joinRoomRequest)
+			}
 		default:
 			client.IncomingMessagesCh <- "UNKNOWN CMD: " + string(request.Op)
 		}
