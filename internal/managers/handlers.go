@@ -18,8 +18,16 @@ func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData 
 		//make sure client is a member in the room
 		_, ok := room.clients[client.Id]
 		if ok {
-			room.messagesCh <- requestMessageData.Message
-			log.Printf("Set Room Topic cmd received:\n%s", requestMessageData.String())
+			message := protocol.Message{
+				RoomId:     room.id,
+				Msg:        requestMessageData.Message,
+				SenderId:   client.Id,
+				SenderName: client.name,
+			}
+			msg, _ := json.Marshal(message)
+			streamMsg := string(msg)
+			room.messagesCh <- streamMsg
+			log.Printf("Send Message cmd received:\n%s", requestMessageData.String())
 			client.returnAck(requestId)
 		} else {
 			client.returnForbiddenError(requestId	)
