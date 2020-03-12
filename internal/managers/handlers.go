@@ -41,6 +41,7 @@ func (client *Client) handleCreateRoom(requestId util.UUID, createRoomData *prot
 	createRoomResponse := protocol.CreateRoomResponse{
 		RoomId: room.id,
 	}
+	room.JoinClient(client)
 	bits, err := json.Marshal(createRoomResponse)
 	if err != nil {
 		client.returnSystemError(requestId, err)
