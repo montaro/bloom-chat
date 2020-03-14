@@ -1,15 +1,22 @@
 package models
 
 import (
+	"sync"
+
 	"github.com/astaxie/beego/orm"
-	"github.com/bloom-chat/internal/managers"
 )
 
-type RoomDAL struct {
-	o orm.Ormer
+var o orm.Ormer
+var ormerOnce sync.Once
+
+func NewOrmer() orm.Ormer {
+	ormerOnce.Do(func() {
+		o = orm.NewOrm()
+	})
+	return o
 }
 
-func (roomDAL *RoomDAL) save(room *managers.Room) {
-	o := orm.NewOrm()
+func save(room *Room) {
+	o = NewOrmer()
 	_, _ = o.Insert(room)
 }

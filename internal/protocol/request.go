@@ -21,21 +21,6 @@ type Request struct {
 	Data      map[string]interface{} `json:"data"`
 }
 
-//func (request *Request) decode() (RequestData, error) {
-//	switch request.Op {
-//	case createRoom:
-//		requestMessageData := &RequestMessageData{}
-//		err := mapstructure.Decode(request.Data, requestMessageData)
-//		if err != nil {
-//			return nil, err
-//		} else {
-//			return requestMessageData, nil
-//		}
-//	default:
-//		return nil, nil
-//	}
-//}
-
 type CreateRoomRequest struct {
 	Topic string
 }
@@ -45,7 +30,7 @@ func (createRoomRequest *CreateRoomRequest) String() string {
 }
 
 type SendMessageRequest struct {
-	RoomId  util.UUID
+	RoomId  int
 	Message string
 }
 
@@ -62,7 +47,7 @@ func (setUserNameRequest *SetUserNameRequest) String() string {
 }
 
 type SetRoomTopicRequest struct {
-	RoomId util.UUID
+	RoomId int
 	Topic  string
 }
 
@@ -71,7 +56,7 @@ func (setRoomTopicRequest *SetRoomTopicRequest) String() string {
 }
 
 type JoinRoomRequest struct {
-	RoomId util.UUID
+	RoomId int
 }
 
 func (joinRoomRequest *JoinRoomRequest) String() string {
@@ -79,7 +64,7 @@ func (joinRoomRequest *JoinRoomRequest) String() string {
 }
 
 type LeaveRoomRequest struct {
-	roomId util.UUID
+	roomId int
 }
 
 func (leaveRoomRequest *LeaveRoomRequest) String() string {
@@ -87,7 +72,7 @@ func (leaveRoomRequest *LeaveRoomRequest) String() string {
 }
 
 type BeginTypingRequest struct {
-	roomId util.UUID
+	roomId int
 }
 
 func (beginTypingRequest *BeginTypingRequest) String() string {
@@ -95,7 +80,7 @@ func (beginTypingRequest *BeginTypingRequest) String() string {
 }
 
 type StopTypingRequest struct {
-	roomId util.UUID
+	roomId int
 }
 
 func (stopTypingRequest *StopTypingRequest) String() string {

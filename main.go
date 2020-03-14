@@ -3,16 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/bloom-chat/internal/managers"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 
-	"github.com/bloom-chat/internal/managers"
 	_ "github.com/bloom-chat/internal/models"
 )
 
-var address = flag.String("address", "127.0.0.1:8080", "HTTP service address")
+var address = flag.String("address", "0.0.0.0:8080", "HTTP service address")
 
 var upgrader = websocket.Upgrader{}
 

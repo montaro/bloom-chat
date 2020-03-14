@@ -16,7 +16,7 @@ import (
 type Client struct {
 	Conn               *websocket.Conn
 	Id                 util.UUID
-	name               string
+	Name               string
 	IncomingMessagesCh chan string
 	CloseCh            chan bool
 }
@@ -63,7 +63,7 @@ func (client *Client) Write() {
 }
 
 func (client *Client) Process(message []byte) {
-	request, err := client.ParseRequest(message)
+	request, err := client.parseRequest(message)
 	if err != nil {
 		var rId util.UUID
 		if request != nil {
@@ -123,7 +123,7 @@ func (client *Client) Process(message []byte) {
 	}
 }
 
-func (client *Client) ParseRequest(message []byte) (*protocol.Request, error) {
+func (client *Client) parseRequest(message []byte) (*protocol.Request, error) {
 	request := protocol.Request{}
 	err := json.Unmarshal(message, &request)
 	if err != nil {
@@ -137,4 +137,40 @@ func (client *Client) ParseRequest(message []byte) (*protocol.Request, error) {
 		return nil, errors.New("request_id field is required")
 	}
 	return &request, nil
+}
+
+func (client *Client) returnAck(requestId util.UUID) {
+	ack := &protocol.Ack{Done: true}
+	response := protocol.Response{
+		RequestId: requestId,
+		Data:      ack,
+	}
+	msg, _ := json.Marshal(response)
+	streamMsg := string(msg)
+	client.IncomingMessagesCh <- streamMsg
+}
+
+func (client *Client) returnError(requestId util.UUID, err error) {
+	errorResponse := &protocol.ErrorResponse{Error: err.Error()}
+	response := protocol.Response{
+		RequestId: requestId,
+		Data:      errorResponse,
+	}
+	msg, _ := json.Marshal(response)
+	streamMsg := string(msg)
+	client.IncomingMessagesCh <- streamMsg
+}
+
+func (client *Client) returnParseDataError(requestId util.UUID, err error) {
+	client.returnError(requestId, errors.New(fmt.Sprintf("failed to parse data with error:\n%s",
+		err.Error())))
+}
+
+func (client *Client) returnSystemError(requestId util.UUID, err error) {
+	client.returnError(requestId, errors.New(fmt.Sprintf("internal system error:\n%s",
+		err.Error())))
+}
+
+func (client *Client) returnForbiddenError(requestId util.UUID) {
+	client.returnError(requestId, errors.New("forbidden action"))
 }

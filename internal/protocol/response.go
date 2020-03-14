@@ -29,7 +29,7 @@ func (ack *Ack) String() string {
 }
 
 type CreateRoomResponse struct {
-	RoomId util.UUID `json:"roomId"`
+	RoomId int `json:"roomId"`
 }
 
 func (createRoomResponse *CreateRoomResponse) String() string {

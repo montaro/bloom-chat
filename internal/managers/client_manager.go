@@ -10,6 +10,7 @@ import (
 )
 
 var clientOnce sync.Once
+var mutex = &sync.Mutex{}
 
 type ClientManager struct {
 	clients map[util.UUID]*Client
@@ -39,7 +40,6 @@ func (manager *ClientManager) AddClient(conn *websocket.Conn) *Client {
 		Conn:               conn,
 		Id:                 util.GenerateID(),
 		IncomingMessagesCh: make(chan string),
-		//RoomsChs:           make(map[util.UUID] chan<- string),
 		CloseCh:            make(chan bool),
 	}
 	mutex.Lock()
