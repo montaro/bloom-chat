@@ -12,6 +12,14 @@ type Response struct {
 	Data      Envelop   `json:"data"`
 }
 
+type ClientConnectedResponse struct {
+	UserID util.UUID `json:"user_id"`
+}
+
+func (clientConnectedResponse *ClientConnectedResponse) String() string {
+	return repr.Repr(clientConnectedResponse)
+}
+
 type ErrorResponse struct {
 	Error string `json:"error"`
 }

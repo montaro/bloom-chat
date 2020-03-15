@@ -32,7 +32,11 @@ func (client *Client) Read() {
 	defer client.Conn.Close()
 	welcomeMsg := fmt.Sprintf("Client connected: %s", client.Id)
 	log.Println(welcomeMsg)
-	if err := client.Conn.WriteMessage(msgType, []byte(welcomeMsg)); err != nil {
+	ClientConnectedResponse := protocol.ClientConnectedResponse {
+		UserID:client.Id,
+	}
+	ClientConnectedResponseJson, _ := json.Marshal(ClientConnectedResponse)
+	if err := client.Conn.WriteMessage(msgType, ClientConnectedResponseJson); err != nil {
 		log.Println("Write welcome message error: ", err)
 	}
 	for {
