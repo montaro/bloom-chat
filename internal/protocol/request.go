@@ -8,6 +8,7 @@ import (
 type RequestOperation string
 
 const (
+	Connect	     RequestOperation = "CONNECT"
 	CreateRoom   RequestOperation = "CREATE_ROOM"
 	SendMessage  RequestOperation = "SEND_MSG"
 	SetUserName  RequestOperation = "SET_USER_NAME"
@@ -19,6 +20,13 @@ type Request struct {
 	RequestId util.UUID              `json:"request_id"`
 	Op        RequestOperation       `json:"op"`
 	Data      map[string]interface{} `json:"data"`
+}
+
+type ConnectRequest struct {
+}
+
+func (connectRequest *ConnectRequest) String() string {
+	return repr.Repr(connectRequest)
 }
 
 type CreateRoomRequest struct {

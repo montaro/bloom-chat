@@ -32,13 +32,6 @@ func (client *Client) Read() {
 	defer client.Conn.Close()
 	welcomeMsg := fmt.Sprintf("Client connected: %s", client.Id)
 	log.Println(welcomeMsg)
-	ClientConnectedResponse := protocol.ClientConnectedResponse {
-		UserID:client.Id,
-	}
-	ClientConnectedResponseJson, _ := json.Marshal(ClientConnectedResponse)
-	if err := client.Conn.WriteMessage(msgType, ClientConnectedResponseJson); err != nil {
-		log.Println("Write welcome message error: ", err)
-	}
 	for {
 		_, msg, err := client.Conn.ReadMessage()
 		message := string(msg)
@@ -76,6 +69,15 @@ func (client *Client) Process(message []byte) {
 		client.returnError(rId, err)
 	} else {
 		switch request.Op {
+		//Connect
+		case protocol.Connect:
+			connectRequest := &protocol.ConnectRequest{}
+			err := mapstructure.Decode(request.Data, connectRequest)
+			if err != nil {
+				client.returnParseDataError(request.RequestId, err)
+			} else {
+				client.handleConnect(request.RequestId, connectRequest)
+			}
 		//Send message to room
 		case protocol.SendMessage:
 			requestMessageData := &protocol.SendMessageRequest{}

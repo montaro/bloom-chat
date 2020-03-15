@@ -13,7 +13,7 @@ type Response struct {
 }
 
 type ClientConnectedResponse struct {
-	UserID util.UUID `json:"user_id"`
+	UserID util.UUID `json:"client_id"`
 }
 
 func (clientConnectedResponse *ClientConnectedResponse) String() string {

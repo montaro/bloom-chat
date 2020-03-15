@@ -9,6 +9,19 @@ import (
 	"github.com/bloom-chat/internal/util"
 )
 
+func (client *Client) handleConnect(requestId util.UUID, connectRequestData *protocol.ConnectRequest) {
+	ClientConnectedResponse := &protocol.ClientConnectedResponse{
+		UserID: client.Id,
+	}
+	ClientConnectedResponseWrapper := protocol.Response{
+		RequestId: requestId,
+		Data:      ClientConnectedResponse,
+	}
+	response, _ := json.Marshal(ClientConnectedResponseWrapper)
+	streamMsg := string(response)
+	client.IncomingMessagesCh <- streamMsg
+}
+
 func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData *protocol.SendMessageRequest) {
 	room, err := roomManager.getRoom(requestMessageData.RoomId)
 	if err != nil {
