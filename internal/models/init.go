@@ -60,7 +60,7 @@ func init() {
 
 	// create table
 	//TODO Handle error
-	_ = orm.RunSyncdb("default", false, true)
+	_ = orm.RunSyncdb("default", true, true)
 
 	//o := orm.NewOrm()
 	//

@@ -37,7 +37,7 @@ func (ack *Ack) String() string {
 }
 
 type CreateRoomResponse struct {
-	RoomId int `json:"roomId"`
+	RoomId int64 `json:"roomId"`
 }
 
 func (createRoomResponse *CreateRoomResponse) String() string {

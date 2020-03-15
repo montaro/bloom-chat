@@ -38,7 +38,7 @@ func (createRoomRequest *CreateRoomRequest) String() string {
 }
 
 type SendMessageRequest struct {
-	RoomId  int
+	RoomId  int64
 	Message string
 }
 
@@ -55,7 +55,7 @@ func (setUserNameRequest *SetUserNameRequest) String() string {
 }
 
 type SetRoomTopicRequest struct {
-	RoomId int
+	RoomId int64
 	Topic  string
 }
 
@@ -64,7 +64,7 @@ func (setRoomTopicRequest *SetRoomTopicRequest) String() string {
 }
 
 type JoinRoomRequest struct {
-	RoomId int
+	RoomId int64
 }
 
 func (joinRoomRequest *JoinRoomRequest) String() string {
@@ -72,7 +72,7 @@ func (joinRoomRequest *JoinRoomRequest) String() string {
 }
 
 type LeaveRoomRequest struct {
-	roomId int
+	roomId int64
 }
 
 func (leaveRoomRequest *LeaveRoomRequest) String() string {
@@ -80,7 +80,7 @@ func (leaveRoomRequest *LeaveRoomRequest) String() string {
 }
 
 type BeginTypingRequest struct {
-	roomId int
+	roomId int64
 }
 
 func (beginTypingRequest *BeginTypingRequest) String() string {
@@ -88,7 +88,7 @@ func (beginTypingRequest *BeginTypingRequest) String() string {
 }
 
 type StopTypingRequest struct {
-	roomId int
+	roomId int64
 }
 
 func (stopTypingRequest *StopTypingRequest) String() string {

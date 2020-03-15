@@ -11,10 +11,10 @@ var mutex = &sync.Mutex{}
 
 // Model Struct
 type Model struct {
-	Id        int `orm:"auto"`
+	Id        int64 `orm:"auto"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	DeletedAt *time.Time `orm:"null"`
 }
 
 type Room struct {

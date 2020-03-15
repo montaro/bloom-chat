@@ -1,7 +1,9 @@
 package models
 
 import (
+	"log"
 	"sync"
+	"time"
 
 	"github.com/astaxie/beego/orm"
 )
@@ -16,7 +18,14 @@ func NewOrmer() orm.Ormer {
 	return o
 }
 
-func save(room *Room) {
+func SaveRoom(room *Room) *Room {
 	o = NewOrmer()
-	_, _ = o.Insert(room)
+	room.CreatedAt = time.Now()
+	room.UpdatedAt = time.Now()
+	roomId, err := o.Insert(room)
+	if err != nil {
+		log.Panicf("Saving a room to DB failed with error: %v\n", err)
+	}
+	room.Id = roomId
+	return room
 }

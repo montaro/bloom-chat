@@ -11,7 +11,7 @@ import (
 var roomOnce sync.Once
 
 type RoomManager struct {
-	rooms         map[int]*models.Room
+	rooms         map[int64]*models.Room
 	clientsManger *RoomManager
 }
 
@@ -19,7 +19,7 @@ var roomManager *RoomManager
 
 func NewRoomManager() *RoomManager {
 	roomOnce.Do(func() {
-		rooms := make(map[int]*models.Room)
+		rooms := make(map[int64]*models.Room)
 		roomManager = &RoomManager{rooms: rooms}
 	})
 	return roomManager
@@ -31,6 +31,7 @@ func (manager *RoomManager) createRoom(topic string) *models.Room {
 		Clients:    make(map[util.UUID]chan string),
 		MessagesCh: make(chan string),
 	}
+	room = models.SaveRoom(room)
 	mutex.Lock()
 	manager.rooms[room.Id] = room
 	mutex.Unlock()
@@ -38,7 +39,7 @@ func (manager *RoomManager) createRoom(topic string) *models.Room {
 	return room
 }
 
-func (manager *RoomManager) getRoom(roomId int) (*models.Room, error) {
+func (manager *RoomManager) getRoom(roomId int64) (*models.Room, error) {
 	mutex.Lock()
 	room, ok := manager.rooms[roomId]
 	mutex.Unlock()
