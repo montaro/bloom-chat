@@ -9,7 +9,7 @@ import (
 	"github.com/bloom-chat/internal/util"
 )
 
-func (client *Client) handleConnect(requestId util.UUID, connectRequestData *protocol.ConnectRequest) {
+func (client *Client) handleConnect(requestId util.UUID, initializeRequest *protocol.InitializeRequest) {
 	ClientConnectedResponse := &protocol.ClientConnectedResponse{
 		UserID: client.Id,
 	}

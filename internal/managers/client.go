@@ -69,14 +69,14 @@ func (client *Client) Process(message []byte) {
 		client.returnError(rId, err)
 	} else {
 		switch request.Op {
-		//Connect
-		case protocol.Connect:
-			connectRequest := &protocol.ConnectRequest{}
-			err := mapstructure.Decode(request.Data, connectRequest)
+		//Initialize
+		case protocol.Initialize:
+			initializeRequest := &protocol.InitializeRequest{}
+			err := mapstructure.Decode(request.Data, initializeRequest)
 			if err != nil {
 				client.returnParseDataError(request.RequestId, err)
 			} else {
-				client.handleConnect(request.RequestId, connectRequest)
+				client.handleConnect(request.RequestId, initializeRequest)
 			}
 		//Send message to room
 		case protocol.SendMessage:
