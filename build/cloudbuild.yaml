@@ -1,0 +1,7 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '--tag=eu.gcr.io/bloom-270222/bloom-chat', '.']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['app', 'deploy']
+timeout: '1600s'
+images: ['eu.gcr.io/bloom-270222/bloom-chat']
