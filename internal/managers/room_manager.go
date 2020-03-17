@@ -31,7 +31,7 @@ func (manager *RoomManager) createRoom(topic string) *models.Room {
 		Clients:    make(map[util.UUID]chan string),
 		MessagesCh: make(chan string),
 	}
-	room = models.SaveRoom(room)
+	room = room.SaveRoom()
 	mutex.Lock()
 	manager.rooms[room.Id] = room
 	mutex.Unlock()

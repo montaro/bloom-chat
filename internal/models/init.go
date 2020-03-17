@@ -5,51 +5,6 @@ import (
 	_ "github.com/mattn/go-sqlite3" // import your used driver
 )
 
-//func init() {
-//	db, err := gorm.Open("sqlite3", "test.db")
-//	if err != nil {
-//		panic("failed to connect database")
-//	}
-//	defer db.Close()
-//
-//	// Migrate the schema
-//	db.AutoMigrate(&Message{})
-//	db.AutoMigrate(&Room{})
-//
-//	// Create
-//	db.Create(&Room{Topic: "ShittyChat"})
-//
-//	// Read
-//	var room Room
-//	db.First(&room, 1) // find product with id 1
-//	db.First(&room, "topic = ?", "ShittyChat") // find product with code l1212
-//
-//	// Update - update product's price to 2000
-//	db.Model(&room).Update("Topic", "Cool Stuff")
-//	//db.Model(&Message{}).AddForeignKey("RoomID", "rooms(id)", "RESTRICT", "RESTRICT")
-//
-//	fmt.Println(repr.Repr(&room))
-//
-//	db.Create(&Message{
-//		Content: "Hello World!",
-//		Room:    room,
-//	})
-//
-//	db.Create(&Message{
-//		Content: "Hey World!",
-//		Room:    room,
-//	})
-//
-//	var message Message
-//
-//	db.First(&message, "Content = ?", "Hey World!")
-//
-//	fmt.Println(repr.Repr(&message.Room))
-//	// Delete - delete product
-//	//db.Delete(&room)
-//	//db.Delete(&message)
-//}
-
 func init() {
 	// register Model
 	orm.RegisterModel(new(Room), new(Message))
@@ -60,7 +15,7 @@ func init() {
 
 	// create table
 	//TODO Handle error
-	_ = orm.RunSyncdb("default", true, true)
+	_ = orm.RunSyncdb("default", false, true)
 
 	//o := orm.NewOrm()
 	//

@@ -19,6 +19,7 @@ type Client struct {
 	Name               string
 	IncomingMessagesCh chan string
 	CloseCh            chan bool
+	Initialized        bool
 }
 
 var msgType = 1
@@ -40,7 +41,36 @@ func (client *Client) Read() {
 			break
 		}
 		log.Printf("Received message: %s from Client: %s\n", message, client.Id)
-		go client.Process(msg)
+		if client.Initialized {
+			go client.Process(msg)
+		} else {
+			//Parse first message
+			request, err := client.parseRequest(msg)
+			if err != nil {
+				var rId util.UUID
+				if request != nil {
+					rId = request.RequestId
+				}
+				client.returnError(rId, err)
+			} else {
+				if request.Op == protocol.Initialize {
+					initializeRequest := &protocol.InitializeRequest{}
+					err := mapstructure.Decode(request.Data, initializeRequest)
+					if err != nil {
+						client.returnParseDataError(request.RequestId, err)
+					} else {
+						err := client.handleInitialize(request.RequestId, initializeRequest)
+						if err != nil {
+							client.returnHandshakeError(request.RequestId, err)
+						} else {
+							client.Initialized = true
+						}
+					}
+				} else {
+					client.returnHandshakeError(request.RequestId, errors.New("expecting initialize message"))
+				}
+			}
+		}
 	}
 }
 
@@ -71,13 +101,7 @@ func (client *Client) Process(message []byte) {
 		switch request.Op {
 		//Initialize
 		case protocol.Initialize:
-			initializeRequest := &protocol.InitializeRequest{}
-			err := mapstructure.Decode(request.Data, initializeRequest)
-			if err != nil {
-				client.returnParseDataError(request.RequestId, err)
-			} else {
-				client.handleConnect(request.RequestId, initializeRequest)
-			}
+		//TODO remove
 		//Send message to room
 		case protocol.SendMessage:
 			requestMessageData := &protocol.SendMessageRequest{}
@@ -145,6 +169,17 @@ func (client *Client) parseRequest(message []byte) (*protocol.Request, error) {
 	return &request, nil
 }
 
+func (client *Client) returnHandshake(requestId util.UUID) {
+	handshake := &protocol.Handshake{ProtocolVersion: protocol.ProtocolVersion}
+	response := protocol.Response{
+		RequestId: requestId,
+		Data:      handshake,
+	}
+	msg, _ := json.Marshal(response)
+	streamMsg := string(msg)
+	client.IncomingMessagesCh <- streamMsg
+}
+
 func (client *Client) returnAck(requestId util.UUID) {
 	ack := &protocol.Ack{Done: true}
 	response := protocol.Response{
@@ -168,12 +203,17 @@ func (client *Client) returnError(requestId util.UUID, err error) {
 }
 
 func (client *Client) returnParseDataError(requestId util.UUID, err error) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("failed to parse data with error:\n%s",
+	client.returnError(requestId, errors.New(fmt.Sprintf("failed to parse data with error: %s",
 		err.Error())))
 }
 
 func (client *Client) returnSystemError(requestId util.UUID, err error) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("internal system error:\n%s",
+	client.returnError(requestId, errors.New(fmt.Sprintf("internal system error: %s",
+		err.Error())))
+}
+
+func (client *Client) returnHandshakeError(requestId util.UUID, err error) {
+	client.returnError(requestId, errors.New(fmt.Sprintf("protocol handshake error: %s",
 		err.Error())))
 }
 

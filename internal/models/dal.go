@@ -18,7 +18,7 @@ func NewOrmer() orm.Ormer {
 	return o
 }
 
-func SaveRoom(room *Room) *Room {
+func (room *Room) SaveRoom() *Room {
 	o = NewOrmer()
 	room.CreatedAt = time.Now()
 	room.UpdatedAt = time.Now()

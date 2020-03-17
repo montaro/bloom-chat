@@ -2,6 +2,8 @@ package managers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/bloom-chat/internal/models"
@@ -9,7 +11,11 @@ import (
 	"github.com/bloom-chat/internal/util"
 )
 
-func (client *Client) handleConnect(requestId util.UUID, initializeRequest *protocol.InitializeRequest) {
+func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *protocol.InitializeRequest) error {
+	if initializeRequest.ProtocolVersion != protocol.ProtocolVersion {
+		return errors.New(fmt.Sprintf("unsupported protocol version, supported version=%1.1f",
+			protocol.ProtocolVersion))
+	}
 	ClientConnectedResponse := &protocol.ClientConnectedResponse{
 		UserID: client.Id,
 	}
@@ -20,6 +26,7 @@ func (client *Client) handleConnect(requestId util.UUID, initializeRequest *prot
 	response, _ := json.Marshal(ClientConnectedResponseWrapper)
 	streamMsg := string(response)
 	client.IncomingMessagesCh <- streamMsg
+	return nil
 }
 
 func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData *protocol.SendMessageRequest) {

@@ -23,6 +23,7 @@ type Request struct {
 }
 
 type InitializeRequest struct {
+	ProtocolVersion float64
 }
 
 func (initializeRequest *InitializeRequest) String() string {

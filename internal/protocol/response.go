@@ -28,6 +28,14 @@ func (errorResponse *ErrorResponse) String() string {
 	return repr.Repr(errorResponse)
 }
 
+type Handshake struct {
+	ProtocolVersion	float64
+}
+
+func (handshake *Handshake) String() string {
+	return repr.Repr(handshake)
+}
+
 type Ack struct {
 	Done bool `json:"done"`
 }
@@ -43,61 +51,3 @@ type CreateRoomResponse struct {
 func (createRoomResponse *CreateRoomResponse) String() string {
 	return repr.Repr(createRoomResponse)
 }
-
-//type SendMessageResponse struct {
-//	RoomId  util.UUID
-//	Message string
-//}
-//
-//func (sendMessageResponse *SendMessageResponse) String() string {
-//	return repr.Repr(sendMessageResponse)
-//}
-
-//type SetUserNameResponse struct {
-//	Topic string
-//}
-//
-//func (setUserNameResponse *SetUserNameResponse) String() string {
-//	return repr.Repr(setUserNameResponse)
-//}
-
-//type SetRoomTopicResponse struct {
-//	RoomId util.UUID
-//	Topic   string
-//}
-//
-//func (setRoomTopicResponse *SetRoomTopicResponse) String() string {
-//	return repr.Repr(setRoomTopicResponse)
-//}
-
-//type JoinRoomResponse struct {
-//	roomId util.UUID
-//}
-//
-//func (joinRoomResponse *JoinRoomResponse) String() string {
-//	return repr.Repr(joinRoomResponse)
-//}
-
-//type LeaveRoomResponse struct {
-//	roomId util.UUID
-//}
-//
-//func (leaveRoomResponse *LeaveRoomResponse) String() string {
-//	return repr.Repr(leaveRoomResponse)
-//}
-
-//type BeginTypingResponse struct {
-//	roomId util.UUID
-//}
-//
-//func (beginTypingResponse *BeginTypingResponse) String() string {
-//	return repr.Repr(beginTypingResponse)
-//}
-//
-//type StopTypingResponse struct {
-//	roomId util.UUID
-//}
-//
-//func (stopTypingResponse *StopTypingResponse) String() string {
-//	return repr.Repr(stopTypingResponse)
-//}
