@@ -51,3 +51,11 @@ type CreateRoomResponse struct {
 func (createRoomResponse *CreateRoomResponse) String() string {
 	return repr.Repr(createRoomResponse)
 }
+
+type ListRoomsResponse struct {
+	Rooms map[int64]string `json:"rooms"`
+}
+
+func (listRoomsResponse *ListRoomsResponse) String() string {
+	return repr.Repr(listRoomsResponse)
+}

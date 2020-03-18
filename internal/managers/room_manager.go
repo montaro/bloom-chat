@@ -49,3 +49,13 @@ func (manager *RoomManager) getRoom(roomId int64) (*models.Room, error) {
 		return room, nil
 	}
 }
+
+func (manager *RoomManager) listRoomsIDs() ([]int64, error) {
+	roomsIDs := make([]int64, len(manager.rooms))
+	i := 0
+	for k, _ := range manager.rooms {
+		roomsIDs[i] = k
+		i ++
+	}
+	return roomsIDs, nil
+}

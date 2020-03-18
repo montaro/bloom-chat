@@ -14,6 +14,7 @@ const (
 	SetUserName  RequestOperation = "SET_USER_NAME"
 	SetRoomTopic RequestOperation = "SET_ROOM_TOPIC"
 	JoinRoom     RequestOperation = "JOIN_ROOM"
+	ListRooms    RequestOperation = "LIST_ROOMS"
 )
 
 type Request struct {
@@ -36,6 +37,13 @@ type CreateRoomRequest struct {
 
 func (createRoomRequest *CreateRoomRequest) String() string {
 	return repr.Repr(createRoomRequest)
+}
+
+type ListRoomsRequest struct {
+}
+
+func (listRoomsRequest *ListRoomsRequest) String() string {
+	return repr.Repr(listRoomsRequest)
 }
 
 type SendMessageRequest struct {

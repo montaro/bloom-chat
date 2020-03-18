@@ -16,14 +16,14 @@ func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *p
 		return errors.New(fmt.Sprintf("unsupported protocol version, supported version=%1.1f",
 			protocol.ProtocolVersion))
 	}
-	ClientConnectedResponse := &protocol.ClientConnectedResponse{
+	clientConnectedResponse := &protocol.ClientConnectedResponse{
 		UserID: client.Id,
 	}
-	ClientConnectedResponseWrapper := protocol.Response{
+	clientConnectedResponseWrapper := protocol.Response{
 		RequestId: requestId,
-		Data:      ClientConnectedResponse,
+		Data:      clientConnectedResponse,
 	}
-	response, _ := json.Marshal(ClientConnectedResponseWrapper)
+	response, _ := json.Marshal(clientConnectedResponseWrapper)
 	streamMsg := string(response)
 	client.IncomingMessagesCh <- streamMsg
 	return nil
@@ -86,6 +86,7 @@ func (client *Client) handleSetRoomTopic(requestId util.UUID, setRoomTopicData *
 }
 
 func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *protocol.JoinRoomRequest) {
+	//TODO check DB!!
 	room, err := roomManager.getRoom(joinRoomRequest.RoomId)
 	if err != nil {
 		client.returnError(requestId, err)
@@ -94,4 +95,24 @@ func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *proto
 		log.Printf("Join Room cmd received:\n%s", joinRoomRequest.String())
 		client.returnAck(requestId)
 	}
+}
+
+func (client *Client) handleListRooms(requestId util.UUID, listRoomRequest *protocol.ListRoomsRequest) {
+	rooms := make(map[int64]string)
+	roomsIDs, _ := roomManager.listRoomsIDs()
+	for _, roomID := range roomsIDs {
+		room, err := roomManager.getRoom(roomID)
+		if err != nil {
+			client.returnSystemError(requestId, err)
+		}
+		rooms[roomID] = room.Topic
+	}
+	listRoomsResponse := &protocol.ListRoomsResponse{Rooms:rooms}
+	listRoomsResponseWrapper := protocol.Response{
+		RequestId: requestId,
+		Data:      listRoomsResponse,
+	}
+	response, _ := json.Marshal(listRoomsResponseWrapper)
+	streamMsg := string(response)
+	client.IncomingMessagesCh <- streamMsg
 }

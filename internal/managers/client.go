@@ -99,9 +99,6 @@ func (client *Client) Process(message []byte) {
 		client.returnError(rId, err)
 	} else {
 		switch request.Op {
-		//Initialize
-		case protocol.Initialize:
-		//TODO remove
 		//Send message to room
 		case protocol.SendMessage:
 			requestMessageData := &protocol.SendMessageRequest{}
@@ -147,8 +144,17 @@ func (client *Client) Process(message []byte) {
 			} else {
 				client.handleJoinRoom(request.RequestId, joinRoomRequest)
 			}
+		//List rooms
+		case protocol.ListRooms:
+			listRoomsRequest := &protocol.ListRoomsRequest{}
+			err := mapstructure.Decode(request.Data, listRoomsRequest)
+			if err != nil {
+				client.returnParseDataError(request.RequestId, err)
+			} else {
+				client.handleListRooms(request.RequestId, listRoomsRequest)
+			}
 		default:
-			client.IncomingMessagesCh <- "UNKNOWN CMD: " + string(request.Op)
+			client.returnUnexpectedCMDError(request.RequestId, string(request.Op))
 		}
 	}
 }
@@ -219,4 +225,8 @@ func (client *Client) returnHandshakeError(requestId util.UUID, err error) {
 
 func (client *Client) returnForbiddenError(requestId util.UUID) {
 	client.returnError(requestId, errors.New("forbidden action"))
+}
+
+func (client *Client) returnUnexpectedCMDError(requestId util.UUID, op string) {
+	client.returnError(requestId, errors.New(fmt.Sprintf("unexpected op: %s", op)))
 }
