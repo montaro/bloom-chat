@@ -98,14 +98,19 @@ func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *proto
 }
 
 func (client *Client) handleListRooms(requestId util.UUID, listRoomRequest *protocol.ListRoomsRequest) {
-	rooms := make(map[int64]string)
+	var rooms  []*protocol.Room
 	roomsIDs, _ := roomManager.listRoomsIDs()
 	for _, roomID := range roomsIDs {
+		var responseRoom *protocol.Room
 		room, err := roomManager.getRoom(roomID)
 		if err != nil {
 			client.returnSystemError(requestId, err)
 		}
-		rooms[roomID] = room.Topic
+		responseRoom = &protocol.Room{
+			Id:    roomID,
+			Topic: room.Topic,
+		}
+		rooms = append(rooms, responseRoom)
 	}
 	listRoomsResponse := &protocol.ListRoomsResponse{Rooms:rooms}
 	listRoomsResponseWrapper := protocol.Response{

@@ -29,7 +29,7 @@ func (errorResponse *ErrorResponse) String() string {
 }
 
 type Handshake struct {
-	ProtocolVersion	float64
+	ProtocolVersion float64
 }
 
 func (handshake *Handshake) String() string {
@@ -52,8 +52,13 @@ func (createRoomResponse *CreateRoomResponse) String() string {
 	return repr.Repr(createRoomResponse)
 }
 
+type Room struct {
+	Id    int64  `json:"id"`
+	Topic string `json:"topic"`
+}
+
 type ListRoomsResponse struct {
-	Rooms map[int64]string `json:"rooms"`
+	Rooms []*Room `json:"rooms"`
 }
 
 func (listRoomsResponse *ListRoomsResponse) String() string {
