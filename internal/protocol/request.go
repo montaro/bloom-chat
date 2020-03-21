@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"github.com/bloom-chat/internal/models"
 	"github.com/bloom-chat/internal/util"
 	"github.com/hackebrot/go-repr/repr"
 )
@@ -48,7 +49,7 @@ func (listRoomsRequest *ListRoomsRequest) String() string {
 
 type SendMessageRequest struct {
 	RoomId  int64
-	Message string
+	Message models.Message
 }
 
 func (sendMessageRequest *SendMessageRequest) String() string {

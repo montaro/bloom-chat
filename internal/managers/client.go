@@ -42,7 +42,8 @@ func (client *Client) Read() {
 		}
 		log.Printf("Received message: %s from Client: %s\n", message, client.Id)
 		if client.Initialized {
-			go client.Process(msg)
+			//TODO Should it run in a different Goroutine?
+			client.Process(msg)
 		} else {
 			//Parse first message
 			request, err := client.parseRequest(msg)

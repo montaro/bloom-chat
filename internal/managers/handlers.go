@@ -36,19 +36,24 @@ func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData 
 	} else {
 		//make sure client is a member in the room
 		_, ok := room.Clients[client.Id]
-		if ok {
+		if !ok {
+			client.returnForbiddenError(requestId)
+		} else {
 			message := models.Message{
 				Room:     room,
-				Content:  requestMessageData.Message,
-				SenderId: client.Id,
+				Content:  requestMessageData.Message.Content,
+				Sender: models.Sender{
+					Id:     client.Id,
+					Name:   client.Name,
+					//Status: "",
+					Client: models.ClientWeb,
+				},
 			}
 			msg, _ := json.Marshal(message.Content)
 			streamMsg := string(msg)
 			room.MessagesCh <- streamMsg
 			log.Printf("Send Message cmd received:\n%s", requestMessageData.String())
 			client.returnAck(requestId)
-		} else {
-			client.returnForbiddenError(requestId)
 		}
 	}
 }
@@ -98,7 +103,7 @@ func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *proto
 }
 
 func (client *Client) handleListRooms(requestId util.UUID, listRoomRequest *protocol.ListRoomsRequest) {
-	var rooms  []*protocol.Room
+	var rooms []*protocol.Room
 	roomsIDs, _ := roomManager.listRoomsIDs()
 	for _, roomID := range roomsIDs {
 		var responseRoom *protocol.Room
@@ -112,7 +117,7 @@ func (client *Client) handleListRooms(requestId util.UUID, listRoomRequest *prot
 		}
 		rooms = append(rooms, responseRoom)
 	}
-	listRoomsResponse := &protocol.ListRoomsResponse{Rooms:rooms}
+	listRoomsResponse := &protocol.ListRoomsResponse{Rooms: rooms}
 	listRoomsResponseWrapper := protocol.Response{
 		RequestId: requestId,
 		Data:      listRoomsResponse,
