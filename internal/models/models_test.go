@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/bloom-chat/internal/util"
 	"testing"
+
+	"github.com/bloom-chat/internal/util"
 )
 
 func TestBroadcast(t *testing.T) {
