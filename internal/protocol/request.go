@@ -48,8 +48,8 @@ func (listRoomsRequest *ListRoomsRequest) String() string {
 }
 
 type SendMessageRequest struct {
-	RoomId  int64
-	Message models.Message
+	RoomId  int64          `mapstructure:"room_id"`
+	Message models.Message `mapstructure:"message"`
 }
 
 func (sendMessageRequest *SendMessageRequest) String() string {

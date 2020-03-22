@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/hackebrot/go-repr/repr"
 	"sync"
 	"time"
 
@@ -11,17 +12,17 @@ var mutex = &sync.Mutex{}
 
 // Model Struct
 type Model struct {
-	Id        int64 `orm:"auto"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `orm:"null"`
+	Id        int64      `orm:"auto";json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `orm:"null";json:"deleted_at"`
 }
 
 type Room struct {
 	Model
 	Topic      string                    `orm:"size(100)"`
-	Clients    map[util.UUID]chan string `orm:"-"`
-	MessagesCh chan string               `orm:"-"`
+	Clients    map[util.UUID]chan string `orm:"-";json:"-"`
+	MessagesCh chan string               `orm:"-";json:"-"`
 }
 
 func (room *Room) Broadcast() {
@@ -41,19 +42,19 @@ func (room *Room) JoinClient(clientId util.UUID, clientCh chan string) {
 	defer mutex.Unlock()
 }
 
-//type Message struct {
-//	Model
-//	Content  string `orm:"size(10000)"`
-//	Room     *Room  `orm:"rel(fk)"`
-//	SenderId util.UUID
-//}
-
 type MessageKind string
 
 const (
 	MessageText          MessageKind = "MSG_TXT"
 	MessagePhoto         MessageKind = "MSG_PHOTO"
 	MessagePhotoAnimated MessageKind = "MSG_PHOTO_ANIM"
+)
+
+type MessageStatus string
+
+const (
+	Seen      MessageStatus = "SEEN"
+	Delivered MessageStatus = "DELIVERED"
 )
 
 type ClientDevice string
@@ -63,40 +64,58 @@ const (
 	ClientMobile ClientDevice = "Mobile"
 )
 
-type ReplyTo struct {
-	Id int64 `json:"id"`
-}
-
-type Permission string
+type PermissionValue string
 
 const (
-	PermissionCanDelete Permission = "CAN_DELETE"
+	PermissionCanDelete PermissionValue = "CAN_DELETE"
+	PermissionCanEdit   PermissionValue = "CAN_EDIT"
+)
+
+type Permission struct {
+	Model
+	Value   string
+	Message []*Message `orm:"rel(m2m)"`
+}
+
+type ClientStatus string
+
+const (
+	Online  ClientStatus = "ONLINE"
+	Offline ClientStatus = "OFFLINE"
+	Away    ClientStatus = "AWAY"
+	Busy    ClientStatus = "Busy"
 )
 
 type Sender struct {
-	Id     util.UUID    `json:"id"`
-	Name   string       `json:"name"`
-	Status string       `json:"status"`
-	Client ClientDevice `json:"client"`
+	Model
+	ClientID util.UUID    `json:"id"`
+	Name     string       `json:"name"`
+	Status   ClientStatus `json:"status"`
+	Client   ClientDevice `json:"client"`
 }
 
 type ImageSize struct {
-	URl    string `json:"url"`
-	Width  string `json:"width"`
-	Height string `json:"height"`
+	Model
+	URl     string   `json:"url"`
+	Width   string   `json:"width"`
+	Height  string   `json:"height"`
+	Message *Message `orm:"rel(fk)"`
 }
 
 type Message struct {
 	Model
-	Id               int64         `json:"id"`
 	Room             *Room         `orm:"rel(fk)"`
 	Kind             MessageKind   `json:"kind"`
 	Content          string        `json:"content"`
 	FormattedContent string        `json:"formatted_content"`
-	Timestamp        int64         `json:"timestamp"`
-	Status           string        `json:"status"`
-	Sender           Sender        `json:"sender"`
-	ReplyTo          ReplyTo       `json:"reply_to"`
-	Permissions      []*Permission `json:"permissions"`
-	Sizes            []*ImageSize  `json:"sizes"`
+	//TODO implement SeenBy
+	//Status           MessageStatus `json:"status"`
+	Sender           *Sender       `orm:"rel(fk)";json:"sender"`
+	ReplyTo          *Message      `orm:"null;rel(fk)";json:"reply_to"`
+	Sizes            []*ImageSize  `orm:"reverse(many)";json:"sizes"`
+	//Permissions      []*Permission `orm:"reverse(many)";json:"permissions"`
+}
+
+func (message *Message) String() string {
+	return repr.Repr(message)
 }

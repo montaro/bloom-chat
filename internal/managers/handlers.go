@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-
-	"github.com/bloom-chat/internal/models"
 	"github.com/bloom-chat/internal/protocol"
 	"github.com/bloom-chat/internal/util"
+	"log"
 )
 
 func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *protocol.InitializeRequest) error {
@@ -39,21 +37,21 @@ func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData 
 		if !ok {
 			client.returnForbiddenError(requestId)
 		} else {
-			message := models.Message{
-				Room:     room,
-				Content:  requestMessageData.Message.Content,
-				Sender: models.Sender{
-					Id:     client.Id,
-					Name:   client.Name,
-					//Status: "",
-					Client: models.ClientWeb,
-				},
+			message := messageManager.createMessage(
+				&requestMessageData.Message, room, client)
+			MessageResponseWrapper := &protocol.Response{
+				RequestId: requestId,
+				Data:      message,
 			}
-			msg, _ := json.Marshal(message.Content)
-			streamMsg := string(msg)
-			room.MessagesCh <- streamMsg
-			log.Printf("Send Message cmd received:\n%s", requestMessageData.String())
-			client.returnAck(requestId)
+			msg, err := json.Marshal(MessageResponseWrapper)
+			if err != nil {
+				client.returnSystemError(requestId, err)
+			} else {
+				streamMsg := string(msg)
+				room.MessagesCh <- streamMsg
+				log.Printf("Send Message cmd received:\n%s", requestMessageData.String())
+				client.returnAck(requestId)
+			}
 		}
 	}
 }
