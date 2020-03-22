@@ -12,17 +12,17 @@ var mutex = &sync.Mutex{}
 
 // Model Struct
 type Model struct {
-	Id        int64      `orm:"auto";json:"id"`
+	Id        int64      `orm:"auto" json:"id"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `orm:"null";json:"deleted_at"`
+	DeletedAt *time.Time `orm:"null" json:"deleted_at,omitempty"`
 }
 
 type Room struct {
 	Model
 	Topic      string                    `orm:"size(100)"`
-	Clients    map[util.UUID]chan string `orm:"-";json:"-"`
-	MessagesCh chan string               `orm:"-";json:"-"`
+	Clients    map[util.UUID]chan string `orm:"-" json:"-"`
+	MessagesCh chan string               `orm:"-" json:"-"`
 }
 
 func (room *Room) Broadcast() {
@@ -107,12 +107,12 @@ type Message struct {
 	Room             *Room         `orm:"rel(fk)"`
 	Kind             MessageKind   `json:"kind"`
 	Content          string        `json:"content"`
-	FormattedContent string        `json:"formatted_content"`
+	FormattedContent string        `json:"formatted_content" mapstructure:"formatted_content"`
 	//TODO implement SeenBy
 	//Status           MessageStatus `json:"status"`
-	Sender           *Sender       `orm:"rel(fk)";json:"sender"`
-	ReplyTo          *Message      `orm:"null;rel(fk)";json:"reply_to"`
-	Sizes            []*ImageSize  `orm:"reverse(many)";json:"sizes"`
+	Sender           *Sender       `orm:"rel(fk)" json:"sender"`
+	ReplyTo          *Message      `orm:"null;rel(fk)" json:"reply_to,omitempty"`
+	Sizes            []*ImageSize  `orm:"reverse(many)" json:"sizes,omitempty"`
 	//Permissions      []*Permission `orm:"reverse(many)";json:"permissions"`
 }
 
