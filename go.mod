@@ -4,7 +4,9 @@ go 1.13
 
 require (
 	github.com/astaxie/beego v1.12.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.1.1
+	github.com/gorilla/schema v1.1.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/hackebrot/go-repr v0.1.0
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible

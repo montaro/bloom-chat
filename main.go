@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/bloom-chat/auth"
 	"github.com/bloom-chat/internal/managers"
 	"log"
 	"net/http"
@@ -41,6 +42,7 @@ func main() {
 	http.HandleFunc("/_ah/health", healthCheckHandler)
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/ws", chat)
+	http.HandleFunc("/auth", auth.Welcome)
 	//initialize managers
 	clientsManager = managers.NewClientManager()
 	managers.NewRoomManager()
