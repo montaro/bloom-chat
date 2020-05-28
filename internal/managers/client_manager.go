@@ -43,13 +43,13 @@ func (manager *ClientManager) AddClient(conn *websocket.Conn) *Client {
 		CloseCh:            make(chan bool),
 	}
 	mutex.Lock()
+	defer mutex.Unlock()
 	manager.clients[client.Id] = client
-	mutex.Unlock()
 	return client
 }
 
 func (manager *ClientManager) RemoveClient(clientId util.UUID) {
 	mutex.Lock()
+	defer mutex.Unlock()
 	delete(manager.clients, clientId)
-	mutex.Unlock()
 }

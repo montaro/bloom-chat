@@ -25,11 +25,17 @@ func NewRoomManager() *RoomManager {
 	return roomManager
 }
 
-func (manager *RoomManager) createRoom(topic string) *models.Room {
+func (manager *RoomManager) createRoom(topic string, client *Client) *models.Room {
 	room := &models.Room{
 		Topic:      topic,
 		Clients:    make(map[util.UUID]chan string),
 		MessagesCh: make(chan string),
+		Owner: &models.User{
+			ClientID: client.Id,
+			Name:     client.Name,
+			Status:   models.Online,
+			Client:   models.ClientWeb,
+		},
 	}
 	room = room.SaveRoom()
 	mutex.Lock()
@@ -55,7 +61,7 @@ func (manager *RoomManager) listRoomsIDs() ([]int64, error) {
 	i := 0
 	for k, _ := range manager.rooms {
 		roomsIDs[i] = k
-		i ++
+		i++
 	}
 	return roomsIDs, nil
 }

@@ -18,7 +18,7 @@ func (messageManager *MessageManager) createMessage(message *models.Message, roo
 		Kind:             message.Kind,
 		Content:          message.Content,
 		FormattedContent: message.FormattedContent,
-		Sender: &models.Sender{
+		Sender: &models.User{
 			ClientID: client.Id,
 			Name:     client.Name,
 			Status:   models.Online,

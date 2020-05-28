@@ -20,6 +20,7 @@ type Model struct {
 
 type Room struct {
 	Model
+	Owner      *User                     `orm:"rel(fk)" json:"sender"`
 	Topic      string                    `orm:"size(100)"`
 	Clients    map[util.UUID]chan string `orm:"-" json:"-"`
 	MessagesCh chan string               `orm:"-" json:"-"`
@@ -86,9 +87,10 @@ const (
 	Busy    ClientStatus = "Busy"
 )
 
-type Sender struct {
+type User struct {
 	Model
 	ClientID util.UUID    `json:"id"`
+	Email    string       `json:"email"`
 	Name     string       `json:"name"`
 	Status   ClientStatus `json:"status"`
 	Client   ClientDevice `json:"client"`
@@ -104,15 +106,15 @@ type ImageSize struct {
 
 type Message struct {
 	Model
-	Room             *Room         `orm:"rel(fk)"`
-	Kind             MessageKind   `json:"kind"`
-	Content          string        `json:"content"`
-	FormattedContent string        `json:"formatted_content" mapstructure:"formatted_content"`
+	Room             *Room       `orm:"rel(fk)"`
+	Kind             MessageKind `json:"kind"`
+	Content          string      `json:"content"`
+	FormattedContent string      `json:"formatted_content" mapstructure:"formatted_content"`
 	//TODO implement SeenBy
 	//Status           MessageStatus `json:"status"`
-	Sender           *Sender       `orm:"rel(fk)" json:"sender"`
-	ReplyTo          *Message      `orm:"null;rel(fk)" json:"reply_to,omitempty"`
-	Sizes            []*ImageSize  `orm:"reverse(many)" json:"sizes,omitempty"`
+	Sender  *User        `orm:"rel(fk)" json:"sender"`
+	ReplyTo *Message     `orm:"null;rel(fk)" json:"reply_to,omitempty"`
+	Sizes   []*ImageSize `orm:"reverse(many)" json:"sizes,omitempty"`
 	//Permissions      []*Permission `orm:"reverse(many)";json:"permissions"`
 }
 

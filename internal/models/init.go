@@ -8,7 +8,7 @@ var o orm.Ormer
 
 func init() {
 	// register Model
-	orm.RegisterModel(new(Room), new(Sender), new(ImageSize), new(Permission), new(Message))
+	orm.RegisterModel(new(Room), new(User), new(ImageSize), new(Permission), new(Message))
 
 	// set default database
 	//TODO Handle error
@@ -16,7 +16,7 @@ func init() {
 
 	// create table
 	//TODO Handle error
-	_ = orm.RunSyncdb("default", true, true)
+	_ = orm.RunSyncdb("default", false, true)
 
 	o = orm.NewOrm()
 }

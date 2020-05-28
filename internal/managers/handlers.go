@@ -57,7 +57,7 @@ func (client *Client) handleSendMessage(requestId util.UUID, requestMessageData 
 }
 
 func (client *Client) handleCreateRoom(requestId util.UUID, createRoomData *protocol.CreateRoomRequest) {
-	room := roomManager.createRoom(createRoomData.Topic)
+	room := roomManager.createRoom(createRoomData.Topic, client)
 	log.Printf("Create Room cmd received:\n%s", createRoomData.String())
 	createRoomResponse := protocol.CreateRoomResponse{
 		RoomId: room.Id,
