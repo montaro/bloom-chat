@@ -27,3 +27,4 @@ gen
 
 # DB
 *.db
+.vscode/
