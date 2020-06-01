@@ -22,7 +22,7 @@ func (messageManager *MessageManager) createMessage(message *models.Message, roo
 			ClientID: client.Id,
 			Name:     client.Name,
 			Status:   models.Online,
-			Client:   models.ClientWeb,
+			Client:   models.Web,
 		},
 	}
 	message = message.SaveMessage()

@@ -34,7 +34,7 @@ func (manager *RoomManager) createRoom(topic string, client *Client) *models.Roo
 			ClientID: client.Id,
 			Name:     client.Name,
 			Status:   models.Online,
-			Client:   models.ClientWeb,
+			Client:   models.Web,
 		},
 	}
 	room = room.SaveRoom()
