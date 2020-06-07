@@ -7,3 +7,13 @@
 ![Cloud Build](https://storage.googleapis.com/bloom-builds/builds//github.com/montaro/bloom-chat/branches/master.svg)
 
 #### yet another chat server
+
+## Run Server
+```bash
+go run main.go
+...
+Server blooming...:  0.0.0.0:8080
+```
+
+## Connect a Websocket Client
+`ws://localhost:8080/chat`
