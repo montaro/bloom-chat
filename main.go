@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/bloom-chat/auth"
-	"github.com/bloom-chat/internal/managers"
-	"log"
 	"net/http"
 
-	"github.com/gorilla/websocket"
-
+	"github.com/bloom-chat/auth"
+	"github.com/bloom-chat/internal/managers"
 	_ "github.com/bloom-chat/internal/models"
+
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 )
 
 var address = flag.String("address", "0.0.0.0:8080", "HTTP service address")
@@ -38,7 +38,6 @@ func chat(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 	fmt.Println("Server blooming...: ", *address)
-	log.SetFlags(0)
 	http.HandleFunc("/_ah/health", healthCheckHandler)
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/ws", chat)
@@ -46,6 +45,7 @@ func main() {
 	//initialize managers
 	clientsManager = managers.NewClientManager()
 	managers.NewRoomManager()
+	managers.NewSessionManager()
 	log.Fatal(http.ListenAndServe(*address, nil))
 }
 

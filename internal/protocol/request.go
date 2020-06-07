@@ -25,7 +25,8 @@ type Request struct {
 }
 
 type InitializeRequest struct {
-	ProtocolVersion float64
+	SessionID   util.UUID `mapstructure:"session_id"`
+	DisplayName string    `mapstructure:"display_name"`
 }
 
 func (initializeRequest *InitializeRequest) String() string {

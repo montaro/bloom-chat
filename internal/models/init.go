@@ -9,8 +9,6 @@ var o orm.Ormer
 func init() {
 	// register Model
 	orm.RegisterModel(
-		new(Session),
-		new(Client),
 		new(UserVisual),
 		new(User),
 		new(Topic),

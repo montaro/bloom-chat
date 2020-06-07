@@ -4,9 +4,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/gorilla/websocket"
-
 	"github.com/bloom-chat/internal/util"
+	"github.com/gorilla/websocket"
 )
 
 var clientOnce sync.Once

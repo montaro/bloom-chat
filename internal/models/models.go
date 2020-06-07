@@ -12,29 +12,11 @@ type Model struct {
 	DeletedAt time.Time `orm:"null" json:"deleted_at,omitempty"`
 }
 
-type Session struct {
-	Model
-	Username string `orm:"null" json:"username,omitempty"`
-}
 
-type UserAgent string
 
-const (
-	Web    UserAgent = "WEB"
-	Mobile UserAgent = "Mobile"
-	CLI    UserAgent = "CLI"
-)
-
-type IP string
-
-type Client struct {
-	Model
-	Session   *Session `orm:"rel(fk)"`
-	UserAgent UserAgent
-	IP        IP
-}
 
 type UserVisual struct {
+	Model
 	DisplayName string `json:"display_name"`
 	Color       string `json:"color"`
 	Photo       string `json:"photo"`
@@ -43,10 +25,10 @@ type UserVisual struct {
 //User in a room
 type User struct {
 	Model
-	SessionID *Session    `orm:"rel(fk)" json:"session_id"`
+	//SessionID *managers.Session    `orm:"rel(fk)" json:"session_id"`
 	Room      *Room       `orm:"rel(fk)" json:"room_id"`
 	Visual    *UserVisual `orm:"rel(fk)" json:"visual"`
-	UserAgent UserAgent   `json:"user_agent"`
+	//UserAgent UserAgent   `json:"user_agent"`
 }
 
 type Topic struct {
