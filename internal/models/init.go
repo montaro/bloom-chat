@@ -8,7 +8,13 @@ var o orm.Ormer
 
 func init() {
 	// register Model
-	orm.RegisterModel(new(Room), new(User), new(ImageSize), new(Permission), new(Message))
+	orm.RegisterModel(
+		new(UserVisual),
+		new(User),
+		new(Topic),
+		new(Room),
+		new(ImageSize),
+		new(Message))
 
 	// set default database
 	//TODO Handle error

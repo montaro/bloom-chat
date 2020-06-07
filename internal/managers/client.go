@@ -4,18 +4,29 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/bloom-chat/internal/protocol"
 	"github.com/bloom-chat/internal/util"
 )
 
+type IP string
+type UserAgent string
+
+const (
+	Web    UserAgent = "WEB"
+	Mobile UserAgent = "Mobile"
+	CLI    UserAgent = "CLI"
+)
+
 type Client struct {
 	Conn               *websocket.Conn
 	Id                 util.UUID
+	UserAgent          UserAgent
+	IP                 IP
 	Name               string
 	IncomingMessagesCh chan string
 	CloseCh            chan bool
@@ -32,46 +43,17 @@ func (client *Client) Start() {
 func (client *Client) Read() {
 	defer client.Conn.Close()
 	welcomeMsg := fmt.Sprintf("Client connected: %s", client.Id)
-	log.Println(welcomeMsg)
+	log.Info(welcomeMsg)
 	for {
 		_, msg, err := client.Conn.ReadMessage()
 		message := string(msg)
 		if err != nil {
-			log.Println("Read message error: ", err)
+			log.Info("Read message error: ", err)
 			break
 		}
-		log.Printf("Received message: %s from Client: %s\n", message, client.Id)
-		if client.Initialized {
-			//TODO Should it run in a different Goroutine?
-			client.Process(msg)
-		} else {
-			//Parse first message
-			request, err := client.parseRequest(msg)
-			if err != nil {
-				var rId util.UUID
-				if request != nil {
-					rId = request.RequestId
-				}
-				client.returnError(rId, err)
-			} else {
-				if request.Op == protocol.Initialize {
-					initializeRequest := &protocol.InitializeRequest{}
-					err := mapstructure.Decode(request.Data, initializeRequest)
-					if err != nil {
-						client.returnParseDataError(request.RequestId, err)
-					} else {
-						err := client.handleInitialize(request.RequestId, initializeRequest)
-						if err != nil {
-							client.returnHandshakeError(request.RequestId, err)
-						} else {
-							client.Initialized = true
-						}
-					}
-				} else {
-					client.returnHandshakeError(request.RequestId, errors.New("expecting initialize message"))
-				}
-			}
-		}
+		log.Infof("Received message: %s from Client: %s\n", message, client.Id)
+		//TODO Should it run in a different Goroutine?
+		client.Process(msg)
 	}
 }
 
@@ -81,7 +63,7 @@ func (client *Client) Write() {
 		select {
 		case msg := <-client.IncomingMessagesCh:
 			if err := client.Conn.WriteMessage(msgType, []byte(msg)); err != nil {
-				log.Println("Write message error: ", err)
+				log.Info("Write message error: ", err)
 				break
 			}
 		case <-client.CloseCh:
@@ -100,60 +82,81 @@ func (client *Client) Process(message []byte) {
 		client.returnError(rId, err)
 	} else {
 		switch request.Op {
-		//Send message to room
-		case protocol.SendMessage:
-			requestMessageData := &protocol.SendMessageRequest{}
-			err := mapstructure.Decode(request.Data, requestMessageData)
+		//Initialize
+		case protocol.Initialize:
+			initializeRequest := &protocol.InitializeRequest{}
+			err := mapstructure.Decode(request.Data, initializeRequest)
 			if err != nil {
 				client.returnParseDataError(request.RequestId, err)
 			} else {
-				client.handleSendMessage(request.RequestId, requestMessageData)
+				client.handleInitialize(request.RequestId, initializeRequest)
+				//TODO replace with FSM
+				client.Initialized = true
 			}
-		//Create room
-		case protocol.CreateRoom:
-			createRoomData := &protocol.CreateRoomRequest{}
-			err := mapstructure.Decode(request.Data, createRoomData)
-			if err != nil {
-				client.returnParseDataError(request.RequestId, err)
-			} else {
-				client.handleCreateRoom(request.RequestId, createRoomData)
-			}
-		//Set user name
-		case protocol.SetUserName:
-			setUserNameData := &protocol.SetUserNameRequest{}
-			err := mapstructure.Decode(request.Data, setUserNameData)
-			if err != nil {
-				client.returnParseDataError(request.RequestId, err)
-			} else {
-				client.handleSetUserName(request.RequestId, setUserNameData)
-			}
-		//Set room topic
-		case protocol.SetRoomTopic:
-			setRoomTopicData := &protocol.SetRoomTopicRequest{}
-			err := mapstructure.Decode(request.Data, setRoomTopicData)
-			if err != nil {
-				client.returnParseDataError(request.RequestId, err)
-			} else {
-				client.handleSetRoomTopic(request.RequestId, setRoomTopicData)
-			}
-		//Join room
-		case protocol.JoinRoom:
-			joinRoomRequest := &protocol.JoinRoomRequest{}
-			err := mapstructure.Decode(request.Data, joinRoomRequest)
-			if err != nil {
-				client.returnParseDataError(request.RequestId, err)
-			} else {
-				client.handleJoinRoom(request.RequestId, joinRoomRequest)
-			}
-		//List rooms
-		case protocol.ListRooms:
-			listRoomsRequest := &protocol.ListRoomsRequest{}
-			err := mapstructure.Decode(request.Data, listRoomsRequest)
-			if err != nil {
-				client.returnParseDataError(request.RequestId, err)
-			} else {
-				client.handleListRooms(request.RequestId, listRoomsRequest)
-			}
+		////Send message to room
+		//case protocol.SendMessage:
+		//	client.assertInitialized(request.RequestId)
+		//	requestMessageData := &protocol.SendMessageRequest{}
+		//	err := mapstructure.Decode(request.Data, requestMessageData)
+		//	if err != nil {
+		//		client.returnParseDataError(request.RequestId, err)
+		//	} else {
+		//		client.handleSendMessage(request.RequestId, requestMessageData)
+		//	}
+		////Create room
+		//case protocol.CreateRoom:
+		//	client.assertInitialized(request.RequestId)
+		//	createRoomData := &protocol.CreateRoomRequest{}
+		//	err := mapstructure.Decode(request.Data, createRoomData)
+		//	if err != nil {
+		//		client.returnParseDataError(request.RequestId, err)
+		//	} else {
+		//		client.handleCreateRoom(request.RequestId, createRoomData)
+		//	}
+		////Set user name
+		//case protocol.SetUserName:
+		//	client.assertInitialized(request.RequestId)
+		//	client.assertInitialized(request.RequestId)
+		//	setUserNameData := &protocol.SetUserNameRequest{}
+		//	err := mapstructure.Decode(request.Data, setUserNameData)
+		//	if err != nil {
+		//		client.returnParseDataError(request.RequestId, err)
+		//	} else {
+		//		client.handleSetUserName(request.RequestId, setUserNameData)
+		//	}
+		////Set room topic
+		//case protocol.SetRoomTopic:
+		//	client.assertInitialized(request.RequestId)
+		//	client.assertInitialized(request.RequestId)
+		//	setRoomTopicData := &protocol.SetRoomTopicRequest{}
+		//	err := mapstructure.Decode(request.Data, setRoomTopicData)
+		//	if err != nil {
+		//		client.returnParseDataError(request.RequestId, err)
+		//	} else {
+		//		client.handleSetRoomTopic(request.RequestId, setRoomTopicData)
+		//	}
+		////Join room
+		//case protocol.JoinRoom:
+		//	client.assertInitialized(request.RequestId)
+		//	client.assertInitialized(request.RequestId)
+		//	joinRoomRequest := &protocol.JoinRoomRequest{}
+		//	err := mapstructure.Decode(request.Data, joinRoomRequest)
+		//	if err != nil {
+		//		client.returnParseDataError(request.RequestId, err)
+		//	} else {
+		//		client.handleJoinRoom(request.RequestId, joinRoomRequest)
+		//	}
+		////List rooms
+		//case protocol.ListRooms:
+		//	client.assertInitialized(request.RequestId)
+		//	client.assertInitialized(request.RequestId)
+		//	listRoomsRequest := &protocol.ListRoomsRequest{}
+		//	err := mapstructure.Decode(request.Data, listRoomsRequest)
+		//	if err != nil {
+		//		client.returnParseDataError(request.RequestId, err)
+		//	} else {
+		//		client.handleListRooms(request.RequestId, listRoomsRequest)
+		//	}
 		default:
 			client.returnUnexpectedCMDError(request.RequestId, string(request.Op))
 		}
@@ -164,7 +167,7 @@ func (client *Client) parseRequest(message []byte) (*protocol.Request, error) {
 	request := protocol.Request{}
 	err := json.Unmarshal(message, &request)
 	if err != nil {
-		log.Printf("error parsing a message: %s from client: %s\n%s\n", string(message), client.Id, err)
+		log.Infof("error parsing a message: %s from client: %s\n%s\n", string(message), client.Id, err)
 		return nil, err
 	}
 	if request.Op == "" {
@@ -220,7 +223,7 @@ func (client *Client) returnSystemError(requestId util.UUID, err error) {
 }
 
 func (client *Client) returnHandshakeError(requestId util.UUID, err error) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("protocol handshake error: %s",
+	client.returnError(requestId, errors.New(fmt.Sprintf("handshake error: %s",
 		err.Error())))
 }
 
@@ -230,4 +233,10 @@ func (client *Client) returnForbiddenError(requestId util.UUID) {
 
 func (client *Client) returnUnexpectedCMDError(requestId util.UUID, op string) {
 	client.returnError(requestId, errors.New(fmt.Sprintf("unexpected op: %s", op)))
+}
+
+func (client *Client) assertInitialized(requestId util.UUID) {
+	if !client.Initialized {
+		client.returnHandshakeError(requestId, errors.New("expecting initialize message"))
+	}
 }
