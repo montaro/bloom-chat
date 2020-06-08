@@ -16,4 +16,4 @@ Server blooming...:  0.0.0.0:8080
 ```
 
 ## Connect a Websocket Client
-`ws://localhost:8080/chat`
+`ws://localhost:8080/ws`
