@@ -21,12 +21,17 @@ func (clientConnectedResponse *ClientConnectedResponse) String() string {
 	return repr.Repr(clientConnectedResponse)
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
+type ResponseError struct {
+	Msg  string `json:"msg"`
+	Code uint   `json:"code"`
 }
 
-func (errorResponse *ErrorResponse) String() string {
-	return repr.Repr(errorResponse)
+func (responseError *ResponseError) Error() string {
+	return repr.Repr(responseError)
+}
+
+func (responseError *ResponseError) String() string {
+	return repr.Repr(responseError)
 }
 
 type Handshake struct {

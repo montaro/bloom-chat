@@ -79,7 +79,7 @@ func (client *Client) Process(message []byte) {
 		if request != nil {
 			rId = request.RequestId
 		}
-		client.returnError(rId, err)
+		client.returnParseDataError(rId, err)
 	} else {
 		switch request.Op {
 		//Initialize
@@ -87,11 +87,12 @@ func (client *Client) Process(message []byte) {
 			initializeRequest := &protocol.InitializeRequest{}
 			err := mapstructure.Decode(request.Data, initializeRequest)
 			if err != nil {
+				log.Infof("error parsing client data: %s", err)
 				client.returnParseDataError(request.RequestId, err)
 			} else {
 				client.handleInitialize(request.RequestId, initializeRequest)
 				//TODO replace with FSM
-				client.Initialized = true
+				//client.Initialized = true
 			}
 		////Send message to room
 		//case protocol.SendMessage:
@@ -179,16 +180,16 @@ func (client *Client) parseRequest(message []byte) (*protocol.Request, error) {
 	return &request, nil
 }
 
-func (client *Client) returnHandshake(requestId util.UUID) {
-	handshake := &protocol.Handshake{ProtocolVersion: protocol.ProtocolVersion}
-	response := protocol.Response{
-		RequestId: requestId,
-		Data:      handshake,
-	}
-	msg, _ := json.Marshal(response)
-	streamMsg := string(msg)
-	client.IncomingMessagesCh <- streamMsg
-}
+//func (client *Client) returnHandshake(requestId util.UUID) {
+//	handshake := &protocol.Handshake{ProtocolVersion: protocol.ProtocolVersion}
+//	response := protocol.Response{
+//		RequestId: requestId,
+//		Data:      handshake,
+//	}
+//	msg, _ := json.Marshal(response)
+//	streamMsg := string(msg)
+//	client.IncomingMessagesCh <- streamMsg
+//}
 
 func (client *Client) returnAck(requestId util.UUID) {
 	ack := &protocol.Ack{Done: true}
@@ -201,11 +202,10 @@ func (client *Client) returnAck(requestId util.UUID) {
 	client.IncomingMessagesCh <- streamMsg
 }
 
-func (client *Client) returnError(requestId util.UUID, err error) {
-	errorResponse := &protocol.ErrorResponse{Error: err.Error()}
+func (client *Client) returnError(requestId util.UUID, err protocol.ResponseError) {
 	response := protocol.Response{
 		RequestId: requestId,
-		Data:      errorResponse,
+		Data:      &err,
 	}
 	msg, _ := json.Marshal(response)
 	streamMsg := string(msg)
@@ -213,26 +213,61 @@ func (client *Client) returnError(requestId util.UUID, err error) {
 }
 
 func (client *Client) returnParseDataError(requestId util.UUID, err error) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("failed to parse data with error: %s",
-		err.Error())))
+	var msg string
+	if err != nil {
+		msg = fmt.Sprintf("failed to parse data with error: %s", err.Error())
+	} else {
+		msg = fmt.Sprintf("failed to parse data with error")
+	}
+	responseError := protocol.ResponseError{
+		Msg: msg,
+		Code: 400,
+	}
+	client.returnError(requestId, responseError)
 }
 
 func (client *Client) returnSystemError(requestId util.UUID, err error) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("internal system error: %s",
-		err.Error())))
+	var msg string
+	if err != nil {
+		msg = fmt.Sprintf("internal system error: %s", err.Error())
+	} else {
+		msg = fmt.Sprintf("internal system error")
+	}
+	responseError := protocol.ResponseError{
+		Msg: msg,
+		Code: 500,
+	}
+	client.returnError(requestId, responseError)
 }
 
 func (client *Client) returnHandshakeError(requestId util.UUID, err error) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("handshake error: %s",
-		err.Error())))
+	var msg string
+	if err != nil {
+		msg = fmt.Sprintf("handshake error: %s", err.Error())
+	} else {
+		msg = fmt.Sprintf("handshake error")
+	}
+	responseError := protocol.ResponseError{
+		Msg: msg,
+		Code: 406,
+	}
+	client.returnError(requestId, responseError)
 }
 
 func (client *Client) returnForbiddenError(requestId util.UUID) {
-	client.returnError(requestId, errors.New("forbidden action"))
+	responseError := protocol.ResponseError{
+		Msg: "forbidden action",
+		Code: 403,
+	}
+	client.returnError(requestId, responseError)
 }
 
 func (client *Client) returnUnexpectedCMDError(requestId util.UUID, op string) {
-	client.returnError(requestId, errors.New(fmt.Sprintf("unexpected op: %s", op)))
+	responseError := protocol.ResponseError{
+		Msg: fmt.Sprintf("bad request, unknown command: %s", op),
+		Code: 400,
+	}
+	client.returnError(requestId, responseError)
 }
 
 func (client *Client) assertInitialized(requestId util.UUID) {

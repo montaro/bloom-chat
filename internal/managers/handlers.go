@@ -2,6 +2,7 @@ package managers
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/goombaio/namegenerator"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -33,17 +34,15 @@ func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *p
 		var err error
 		session, err = sessionManager.GetSession(initializeRequest.SessionID)
 		if err != nil {
-			if initializeRequest.DisplayName == "" {
-				//Generate a random name
-				initializeRequest.DisplayName = generateDisplayName()
-			}
 			session = newSession(requestId, client, initializeRequest.DisplayName)
 		}
-	} else {
-		if initializeRequest.DisplayName == "" {
-			//Generate a random name
-			initializeRequest.DisplayName = generateDisplayName()
+		if client.Initialized {
+			if session.Id != initializeRequest.SessionID {
+				client.returnHandshakeError(requestId, errors.New("session already initialized"))
+				return
+			}
 		}
+	} else {
 		session = newSession(requestId, client, initializeRequest.DisplayName)
 	}
 	if initializeRequest.DisplayName != "" {
@@ -59,6 +58,7 @@ func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *p
 	}
 	response, _ := json.Marshal(clientConnectedResponseWrapper)
 	streamMsg := string(response)
+	client.Initialized = true
 	client.IncomingMessagesCh <- streamMsg
 }
 
