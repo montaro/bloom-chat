@@ -3,12 +3,10 @@ package managers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/goombaio/namegenerator"
-	log "github.com/sirupsen/logrus"
-	"time"
-
+	"github.com/bloom-chat/internal/models"
 	"github.com/bloom-chat/internal/protocol"
 	"github.com/bloom-chat/internal/util"
+	log "github.com/sirupsen/logrus"
 )
 
 func newSession(requestId util.UUID, client *Client, displayName string) *Session {
@@ -20,12 +18,6 @@ func newSession(requestId util.UUID, client *Client, displayName string) *Sessio
 			"session ID: %s, client ID: %s, request ID: %s", session.Id, client.Id, requestId)
 	}
 	return session
-}
-
-func generateDisplayName() string {
-	seed := time.Now().UTC().UnixNano()
-	nameGenerator := namegenerator.NewNameGenerator(seed)
-	return nameGenerator.Generate()
 }
 
 func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *protocol.InitializeRequest) {
@@ -105,7 +97,7 @@ func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *p
 //		client.IncomingMessagesCh <- string(bits)
 //	}
 //}
-//
+
 //func (client *Client) handleSetUserName(requestId util.UUID, setUserNameData *protocol.SetUserNameRequest) {
 //	client.Name = setUserNameData.Name
 //	log.Printf("Set User Topic cmd received:\n%s", setUserNameData.String())
@@ -123,18 +115,25 @@ func (client *Client) handleInitialize(requestId util.UUID, initializeRequest *p
 //	}
 //}
 //
-//func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *protocol.JoinRoomRequest) {
-//	//TODO check DB!!
-//	room, err := roomManager.getRoom(joinRoomRequest.RoomId)
-//	if err != nil {
-//		client.returnError(requestId, err)
-//	} else {
-//		room.JoinClient(client.Id, client.IncomingMessagesCh)
-//		log.Printf("Join Room cmd received:\n%s", joinRoomRequest.String())
-//		client.returnAck(requestId)
-//	}
-//}
-//
+
+func (client *Client) handleJoinRoom(requestId util.UUID, joinRoomRequest *protocol.JoinRoomRequest) {
+	//TODO check DB!!
+	room, err := roomManager.getRoom(joinRoomRequest.Handle)
+	if err != nil {
+		//TODO Room not found, create a room
+		topic := models.Topic{
+			Text: util.GenerateDisplayName(),
+		}
+		room = roomManager.createRoom(joinRoomRequest.Handle, &topic)
+	}
+	//TODO Room already exists
+	//room.JoinClient(&client.IncomingMessagesCh)
+	log.Infof("Join Room cmd received:\n%s", joinRoomRequest.String())
+	log.Infof("new room created: %d", room)
+	//TODO Return
+	client.returnAck(requestId)
+}
+
 //func (client *Client) handleListRooms(requestId util.UUID, listRoomRequest *protocol.ListRoomsRequest) {
 //	var rooms []*protocol.Room
 //	roomsIDs, _ := roomManager.listRoomsIDs()

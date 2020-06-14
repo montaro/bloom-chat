@@ -1,8 +1,11 @@
 package models
 
 import (
+	"sync"
 	"time"
 )
+
+var mutex = &sync.Mutex{}
 
 // Base Model Struct
 type Model struct {
@@ -11,9 +14,6 @@ type Model struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	DeletedAt time.Time `orm:"null" json:"deleted_at,omitempty"`
 }
-
-
-
 
 type UserVisual struct {
 	Model
@@ -26,8 +26,8 @@ type UserVisual struct {
 type User struct {
 	Model
 	//SessionID *managers.Session    `orm:"rel(fk)" json:"session_id"`
-	Room      *Room       `orm:"rel(fk)" json:"room_id"`
-	Visual    *UserVisual `orm:"rel(fk)" json:"visual"`
+	Room   *Room       `orm:"rel(fk)" json:"room_id"`
+	Visual *UserVisual `orm:"rel(fk)" json:"visual"`
 	//UserAgent UserAgent   `json:"user_agent"`
 }
 
@@ -39,9 +39,28 @@ type Topic struct {
 
 type Room struct {
 	Model
-	Owner      *User       `orm:"rel(fk)" json:"sender"`
-	Topic      *Topic      `orm:"rel(fk)" json:"topic"`
-	MessagesCh chan string `orm:"-" json:"-"`
+	Handle     string         `json:"handle"`
+	//Owner      *User          `orm:"rel(fk)" json:"sender"`
+	Topic      *Topic         `orm:"rel(fk)" json:"topic"`
+	Clients    []*chan string `orm:"-" json:"-"`
+	MessagesCh chan string    `orm:"-" json:"-"`
+}
+
+func (room *Room) Broadcast() {
+	for {
+		select {
+		case msg := <-room.MessagesCh:
+			for _, client := range room.Clients {
+				*client <- msg
+			}
+		}
+	}
+}
+
+func (room *Room) JoinClient(clientCh *chan string) {
+	mutex.Lock()
+	room.Clients = append(room.Clients, clientCh)
+	defer mutex.Unlock()
 }
 
 type MessageKind string

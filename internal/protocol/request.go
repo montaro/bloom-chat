@@ -75,7 +75,7 @@ func (setRoomTopicRequest *SetRoomTopicRequest) String() string {
 }
 
 type JoinRoomRequest struct {
-	RoomId int64
+	Handle string `mapstructure:"handle"`
 }
 
 func (joinRoomRequest *JoinRoomRequest) String() string {

@@ -82,6 +82,12 @@ func (client *Client) Process(message []byte) {
 		client.returnParseDataError(rId, err)
 	} else {
 		switch request.Op {
+		//TODO Decoder needs to be configured to require the struct fields
+		//decoderConfig := mapstructure.DecoderConfig{
+		//	ErrorUnused: true,
+		//	Result: nil,
+		//}
+		//decoder, _ := mapstructure.NewDecoder(&decoderConfig)
 		//Initialize
 		case protocol.Initialize:
 			initializeRequest := &protocol.InitializeRequest{}
@@ -136,17 +142,16 @@ func (client *Client) Process(message []byte) {
 		//	} else {
 		//		client.handleSetRoomTopic(request.RequestId, setRoomTopicData)
 		//	}
-		////Join room
-		//case protocol.JoinRoom:
-		//	client.assertInitialized(request.RequestId)
-		//	client.assertInitialized(request.RequestId)
-		//	joinRoomRequest := &protocol.JoinRoomRequest{}
-		//	err := mapstructure.Decode(request.Data, joinRoomRequest)
-		//	if err != nil {
-		//		client.returnParseDataError(request.RequestId, err)
-		//	} else {
-		//		client.handleJoinRoom(request.RequestId, joinRoomRequest)
-		//	}
+		//Join room
+		case protocol.JoinRoom:
+			//client.assertInitialized(request.RequestId)
+			joinRoomRequest := &protocol.JoinRoomRequest{}
+			err := mapstructure.Decode(request.Data, joinRoomRequest)
+			if err != nil {
+				client.returnParseDataError(request.RequestId, err)
+			} else {
+				client.handleJoinRoom(request.RequestId, joinRoomRequest)
+			}
 		////List rooms
 		//case protocol.ListRooms:
 		//	client.assertInitialized(request.RequestId)
@@ -220,7 +225,7 @@ func (client *Client) returnParseDataError(requestId util.UUID, err error) {
 		msg = fmt.Sprintf("failed to parse data with error")
 	}
 	responseError := protocol.ResponseError{
-		Msg: msg,
+		Msg:  msg,
 		Code: 400,
 	}
 	client.returnError(requestId, responseError)
@@ -234,7 +239,7 @@ func (client *Client) returnSystemError(requestId util.UUID, err error) {
 		msg = fmt.Sprintf("internal system error")
 	}
 	responseError := protocol.ResponseError{
-		Msg: msg,
+		Msg:  msg,
 		Code: 500,
 	}
 	client.returnError(requestId, responseError)
@@ -248,7 +253,7 @@ func (client *Client) returnHandshakeError(requestId util.UUID, err error) {
 		msg = fmt.Sprintf("handshake error")
 	}
 	responseError := protocol.ResponseError{
-		Msg: msg,
+		Msg:  msg,
 		Code: 406,
 	}
 	client.returnError(requestId, responseError)
@@ -256,7 +261,7 @@ func (client *Client) returnHandshakeError(requestId util.UUID, err error) {
 
 func (client *Client) returnForbiddenError(requestId util.UUID) {
 	responseError := protocol.ResponseError{
-		Msg: "forbidden action",
+		Msg:  "forbidden action",
 		Code: 403,
 	}
 	client.returnError(requestId, responseError)
@@ -264,7 +269,7 @@ func (client *Client) returnForbiddenError(requestId util.UUID) {
 
 func (client *Client) returnUnexpectedCMDError(requestId util.UUID, op string) {
 	responseError := protocol.ResponseError{
-		Msg: fmt.Sprintf("bad request, unknown command: %s", op),
+		Msg:  fmt.Sprintf("bad request, unknown command: %s", op),
 		Code: 400,
 	}
 	client.returnError(requestId, responseError)
